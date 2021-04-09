@@ -1,16 +1,33 @@
+use rand::{thread_rng, Rng};
+
 const ALPN_EXTENSION: &[u8; 2] = b"\x00\x10";
 
+pub struct Jarm {
+    pub raw: String
+}
+
+impl Jarm {
+    fn new(raw: &str) -> Jarm {
+        Jarm{
+            raw: raw.to_string(),
+        }
+    }
+}
+
+#[derive(PartialEq)]
 pub enum TlsVersion {
     TLS1_1,
     TLS1_2,
     TLS1_3,
 }
 
+#[derive(PartialEq)]
 pub enum CipherList {
     ALL,
     NO1_3,
 }
 
+#[derive(PartialEq)]
 pub enum CipherOrder {
     FORWARD,
     REVERSE,
@@ -19,15 +36,11 @@ pub enum CipherOrder {
     MIDDLE_OUT,
 }
 
+#[derive(PartialEq)]
 pub enum TlsVersionSupport {
     TLS1_2,
     TLS1_3,
     NO_SUPPORT,
-}
-
-pub enum ExtensionOrder {
-    FORWARD,
-    REVERSE,
 }
 
 pub struct PacketSpecification {
@@ -39,16 +52,257 @@ pub struct PacketSpecification {
     pub use_grease: bool,
     pub use_rare_apln: bool,
     pub tls_version_support: TlsVersionSupport,
-    pub extension_order: ExtensionOrder,
+    pub extension_order: CipherOrder,
 }
 
 
-pub fn build_packet(spec: &PacketSpecification) -> &'static [u8; 442] {  // TODO
-    return b"\x16\x03\x03\x01\xb5\x01\x00\x01\xb1\x03\x03\xf4\xd2y\xb3I9\t\xf6\xbfz\x86{\xba+\x145Z3#\xd2\xe8\xee_\xb2\x9b5eT\xbeE\xb1\x81 &!\x1am\xa9\xe8t\t\xda\x01\r\xde \xf6\xe8\x10\xe0\x07E'\xcf@\xbaD\xad\xabD\xb4\xc5P\xee\x9a\x00\x8a\x00\x16\x003\x00g\xc0\x9e\xc0\xa2\x00\x9e\x009\x00k\xc0\x9f\xc0\xa3\x00\x9f\x00E\x00\xbe\x00\x88\x00\xc4\x00\x9a\xc0\x08\xc0\t\xc0#\xc0\xac\xc0\xae\xc0+\xc0\n\xc0$\xc0\xad\xc0\xaf\xc0,\xc0r\xc0s\xcc\xa9\x13\x02\x13\x01\xcc\x14\xc0\x07\xc0\x12\xc0\x13\xc0'\xc0/\xc0\x14\xc0(\xc00\xc0`\xc0a\xc0v\xc0w\xcc\xa8\x13\x05\x13\x04\x13\x03\xcc\x13\xc0\x11\x00\n\x00/\x00<\xc0\x9c\xc0\xa0\x00\x9c\x005\x00=\xc0\x9d\xc0\xa1\x00\x9d\x00A\x00\xba\x00\x84\x00\xc0\x00\x07\x00\x04\x00\x05\x01\x00\x00\xde\x00\x00\x00!\x00\x1f\x00\x00\x1cjsonplaceholder.typicode.com\x00\x17\x00\x00\x00\x01\x00\x01\x01\xff\x01\x00\x01\x00\x00\n\x00\n\x00\x08\x00\x1d\x00\x17\x00\x18\x00\x19\x00\x0b\x00\x02\x01\x00\x00#\x00\x00\x00\x10\x00<\x00:\x02hq\x03h2c\x06spdy/3\x02h2\x06spdy/2\x06spdy/1\x08http/1.1\x08http/1.0\x08http/0.9\x00\r\x00\x14\x00\x12\x04\x03\x08\x04\x04\x01\x05\x03\x08\x05\x05\x01\x08\x06\x06\x01\x02\x01\x003\x00&\x00$\x00\x1d\x00 Z]6\x15\xb6?\xd8\xd4\xd1]\xee\xc1\x81\x99\xfe\x01\xf3\t\xdf\x83\xae\xd7\x8b\xb4\xf5\t\x11\x17\x08\xda\x82\x01\x00-\x00\x02\x01\x01\x00+\x00\x07\x06\x03\x03\x03\x02\x03\x01";
+pub fn build_packet(jarm_details: &PacketSpecification) -> Vec<u8> {
+    let mut client_hello = Vec::new();
+    let mut payload= b"\x16".to_vec();
+
+    match jarm_details.tls_version {
+        TlsVersion::TLS1_1 => { unimplemented!() }
+        TlsVersion::TLS1_2 => {
+            payload.extend(b"\x03\x03");
+            client_hello.extend(b"\x03\x03");
+        }
+        TlsVersion::TLS1_3 => { todo!()}  // TODO / TOTEST
+    }
+
+    client_hello.extend(random_bytes());
+    let session_id = random_bytes();  // TODO mock for unittest
+    let session_id_length = pack_as_unsigned_char(session_id.len());
+    client_hello.push(session_id_length);
+    client_hello.extend(session_id);
+
+    let cipher_choice = get_ciphers(jarm_details);
+    let client_suites_length = pack_as_unsigned_short(cipher_choice.len());
+    client_hello.extend(client_suites_length);
+    client_hello.extend(cipher_choice);
+    client_hello.push(b'\x01');  // cipher methods
+    client_hello.push(b'\x00');  // compression_methods
+    client_hello.extend(get_extensions(jarm_details));
+
+    // Finish packet assembly
+    let mut inner_length = b"\x00".to_vec();
+    inner_length.extend(pack_as_unsigned_short(client_hello.len()));
+    let mut handshake_protocol = b"\x01".to_vec();
+    handshake_protocol.extend(inner_length);
+    handshake_protocol.extend(client_hello);
+    let outer_length = pack_as_unsigned_short(handshake_protocol.len());
+    payload.extend(outer_length);
+    payload.extend(handshake_protocol);
+    payload
+}
+
+// mocked version TODO find a way to use it only for tests
+pub fn random_bytes() -> Vec<u8> {
+    vec![42; 32]
+}
+
+// #[cfg(not(test))]
+// pub fn random_bytes() -> Vec<u8> {
+//     let mut rng = thread_rng();
+//     rng.gen::<[u8; 32]>().to_vec()
+// }
+
+pub fn pack_as_unsigned_char(n: usize) -> u8 {
+    if n >= 256 {
+        panic!("Can't pack_as_unsigned_char {:?} as it is over 255", n)
+    }
+    n as u8
+}
+
+pub fn pack_as_unsigned_short(n: usize) -> Vec<u8> {
+    vec![(n >> 8) as u8, n as u8]
+}
+
+pub fn get_ciphers(jarm_details: &PacketSpecification) -> Vec<u8> {
+    // TODO implement all
+    let mut selected_ciphers = Vec::new();
+
+    let list = match jarm_details.cipher_list {
+        CipherList::ALL => {
+            vec![b"\x00\x16", b"\x00\x33", b"\x00\x67", b"\xc0\x9e", b"\xc0\xa2", b"\x00\x9e", b"\x00\x39", b"\x00\x6b",
+                b"\xc0\x9f", b"\xc0\xa3", b"\x00\x9f", b"\x00\x45", b"\x00\xbe", b"\x00\x88", b"\x00\xc4", b"\x00\x9a",
+                b"\xc0\x08", b"\xc0\x09", b"\xc0\x23", b"\xc0\xac", b"\xc0\xae", b"\xc0\x2b", b"\xc0\x0a", b"\xc0\x24",
+                b"\xc0\xad", b"\xc0\xaf", b"\xc0\x2c", b"\xc0\x72", b"\xc0\x73", b"\xcc\xa9", b"\x13\x02", b"\x13\x01",
+                b"\xcc\x14", b"\xc0\x07", b"\xc0\x12", b"\xc0\x13", b"\xc0\x27", b"\xc0\x2f", b"\xc0\x14", b"\xc0\x28",
+                b"\xc0\x30", b"\xc0\x60", b"\xc0\x61", b"\xc0\x76", b"\xc0\x77", b"\xcc\xa8", b"\x13\x05", b"\x13\x04",
+                b"\x13\x03", b"\xcc\x13", b"\xc0\x11", b"\x00\x0a", b"\x00\x2f", b"\x00\x3c", b"\xc0\x9c", b"\xc0\xa0",
+                b"\x00\x9c", b"\x00\x35", b"\x00\x3d", b"\xc0\x9d", b"\xc0\xa1", b"\x00\x9d", b"\x00\x41", b"\x00\xba",
+                b"\x00\x84", b"\x00\xc0", b"\x00\x07", b"\x00\x04", b"\x00\x05"]
+        }
+        CipherList::NO1_3 => {todo!()}
+    };
+
+    if jarm_details.cipher_order != CipherOrder::FORWARD {
+        todo!()
+    }
+    if jarm_details.use_grease {
+        todo!()
+    }
+
+    for x in list {
+        selected_ciphers.extend(x);
+    }
+    selected_ciphers
+}
+
+pub fn get_extensions(jarm_details: &PacketSpecification) -> Vec<u8> {
+    let mut extension_bytes = Vec::new();
+    let mut all_extensions = Vec::new();
+
+    if jarm_details.use_grease {
+        todo!()
+    }
+    all_extensions.extend(extension_server_name(jarm_details));
+
+    // Other extensions
+    let extended_master_secret = b"\x00\x17\x00\x00";
+    all_extensions.extend(extended_master_secret);
+    let max_fragment_length = b"\x00\x01\x00\x01\x01";
+    all_extensions.extend(max_fragment_length);
+    let renegotiation_info = b"\xff\x01\x00\x01\x00";
+    all_extensions.extend(renegotiation_info);
+    let supported_groups = b"\x00\x0a\x00\x0a\x00\x08\x00\x1d\x00\x17\x00\x18\x00\x19";
+    all_extensions.extend(supported_groups);
+    let ec_point_formats = b"\x00\x0b\x00\x02\x01\x00";
+    all_extensions.extend(ec_point_formats);
+    let session_ticket = b"\x00\x23\x00\x00";
+    all_extensions.extend(session_ticket);
+
+    // Application Layer Protocol Negotiation extension
+    all_extensions.extend(aplns(jarm_details));
+    let signature_algorithms = b"\x00\x0d\x00\x14\x00\x12\x04\x03\x08\x04\x04\x01\x05\x03\x08\x05\x05\x01\x08\x06\x06\x01\x02\x01";
+    all_extensions.extend(signature_algorithms);
+
+    // Key share extension
+    all_extensions.extend(key_share(jarm_details.use_grease));
+    let psk_key_exchange_modes = b"\x00\x2d\x00\x02\x01\x01";
+    all_extensions.extend(psk_key_exchange_modes);
+
+    if jarm_details.tls_version == TlsVersion::TLS1_3
+        || jarm_details.tls_version_support == TlsVersionSupport::TLS1_2 {
+        all_extensions.extend(supported_versions(jarm_details));
+    }
+
+    extension_bytes.extend(pack_as_unsigned_short(all_extensions.len()));
+    extension_bytes.extend(all_extensions);
+    extension_bytes
+}
+
+pub fn extension_server_name(jarm_details: &PacketSpecification) -> Vec<u8> {
+    let mut ext_sni = b"\x00\x00".to_vec();
+    let host_length = jarm_details.host.len();
+    let ext_sni_length = host_length + 5;
+    ext_sni.extend(pack_as_unsigned_short(ext_sni_length));
+
+    let ext_sni_length2 = host_length + 3;
+    ext_sni.extend(pack_as_unsigned_short(ext_sni_length2));
+    ext_sni.push(b'\x00');
+
+    let ext_sni_length3 = host_length;
+    ext_sni.extend(pack_as_unsigned_short(ext_sni_length3));
+
+    ext_sni.extend(jarm_details.host.bytes());
+    ext_sni
+}
+
+// Client hello apln extension
+pub fn aplns(jarm_details: &PacketSpecification) -> Vec<u8> {
+    let mut ext = b"\x00\x10".to_vec();
+    let mut alpns: Vec<Vec<u8>> = if jarm_details.use_rare_apln {
+        todo!()
+    } else {
+        vec![
+            b"\x08\x68\x74\x74\x70\x2f\x30\x2e\x39".to_vec(),
+            b"\x08\x68\x74\x74\x70\x2f\x31\x2e\x30".to_vec(),
+            b"\x08\x68\x74\x74\x70\x2f\x31\x2e\x31".to_vec(),
+            b"\x06\x73\x70\x64\x79\x2f\x31".to_vec(),
+            b"\x06\x73\x70\x64\x79\x2f\x32".to_vec(),
+            b"\x06\x73\x70\x64\x79\x2f\x33\x02\x68\x32".to_vec(),
+            b"\x03\x68\x32\x63".to_vec(),
+            b"\x02\x68\x71".to_vec()
+        ]
+    };
+
+    cipher_mung(&mut alpns, &jarm_details.extension_order);
+
+    // flatten the alpns
+    let mut all_alpns = Vec::new();
+    for alpn in alpns {
+        all_alpns.extend(alpn);
+    }
+
+    let second_length  = all_alpns.len();
+    let first_length = second_length + 2;
+    ext.extend(pack_as_unsigned_short(first_length));
+    ext.extend(pack_as_unsigned_short(second_length));
+    eprintln!("ext = {:?}", ext);
+    ext.extend(all_alpns);
+    ext
+}
+
+pub fn cipher_mung(ciphers: &mut Vec<Vec<u8>>, cipher_order: &CipherOrder) {
+    match cipher_order {
+        CipherOrder::FORWARD => {}  // nothing to do
+        CipherOrder::REVERSE => { ciphers.reverse() }
+        CipherOrder::TOP_HALF => { todo!() }
+        CipherOrder::BOTTOM_HALF => { todo!() }
+        CipherOrder::MIDDLE_OUT => { todo!() }
+    }
+}
+
+pub fn key_share(grease: bool) -> Vec<u8> {
+    let mut ext = b"\x00\x33".to_vec();
+
+    let mut share_ext = if grease {
+        todo!()
+    } else {
+        Vec::new()
+    };
+    share_ext.extend(b"\x00\x1d");  // group
+    share_ext.extend(b"\x00\x20");  // key_exchange_length
+    share_ext.extend(random_bytes());  // key_exchange_length
+
+    let second_length  = share_ext.len();
+    let first_length = second_length + 2;
+    ext.extend(pack_as_unsigned_short(first_length));
+    ext.extend(pack_as_unsigned_short(second_length));
+    ext.extend(share_ext);
+    ext
+}
+
+pub fn supported_versions(jarm_details: &PacketSpecification) -> Vec<u8> {
+    let mut tls = if jarm_details.tls_version_support == TlsVersionSupport::TLS1_2 {
+        vec![b"\x03\x01".to_vec(), b"\x03\x02".to_vec(), b"\x03\x03".to_vec()]
+    } else {  // TLS 1.3 is supported
+        vec![b"\x03\x01".to_vec(), b"\x03\x02".to_vec(), b"\x03\x03".to_vec(), b"\x03\x04".to_vec()]
+    };
+    cipher_mung(&mut tls, &jarm_details.extension_order);
+
+    // Assemble the extension
+    let mut ext = b"\x00\x2b".to_vec();
+    let mut versions = if jarm_details.use_grease {
+        todo!()
+    } else {
+        Vec::new()
+    };
+
+    for version in tls {
+        versions.extend(version);
+    }
+
+    let second_length  = versions.len();
+    let first_length = second_length + 1;
+    ext.extend(pack_as_unsigned_short(first_length));
+    ext.push(pack_as_unsigned_char(second_length));
+    ext.extend(versions);
+    ext
 }
 
 pub fn read_packet(data: Vec<u8>) -> Jarm {
-
     if (data[0] != 22) || (data[5] != 2){
         return Jarm::new("|||");  // Default jarm
     }
@@ -154,17 +408,4 @@ pub fn find_extension(types: &Vec<&[u8]>, values: Vec<Option<&[u8]>>) -> String 
         i += 1
     }
     return "".to_string();
-}
-
-
-pub struct Jarm {
-    pub raw: String
-}
-
-impl Jarm {
-    fn new(raw: &str) -> Jarm {
-        Jarm{
-            raw: raw.to_string(),
-        }
-    }
 }

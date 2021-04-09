@@ -1,7 +1,7 @@
 use std::net::{TcpStream};
 use std::io::{Read, Write, Error};
 use std::str::from_utf8;
-use jarm::{build_packet, read_packet, PacketSpecification, TlsVersion, CipherList, CipherOrder, TlsVersionSupport, ExtensionOrder};
+use jarm::{build_packet, read_packet, PacketSpecification, TlsVersion, CipherList, CipherOrder, TlsVersionSupport};
 
 fn main() {
     match TcpStream::connect("jsonplaceholder.typicode.com:443") {
@@ -17,11 +17,11 @@ fn main() {
                 use_grease: false,
                 use_rare_apln: false,
                 tls_version_support: TlsVersionSupport::TLS1_2,
-                extension_order: ExtensionOrder::REVERSE,
+                extension_order: CipherOrder::REVERSE,
             };
             let msg = build_packet(&spec); // b"\x16ello!";
 
-            stream.write(msg).unwrap();
+            stream.write(&msg).unwrap();
 
             println!("Sent Hello, awaiting reply...");
 
