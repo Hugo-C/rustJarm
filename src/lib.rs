@@ -338,7 +338,7 @@ pub fn as_u32_be(array: &[u8]) -> u32 {
         eprintln!("array = {:?}", array);
         unimplemented!()  // not needed for now
     }
-    ((array[0] as u32) << 8) + ((array[1] as u32) << 0)
+    ((array[0] as u32) << 8) + (array[1] as u32)
 }
 
 pub fn extract_extension_info(data: Vec<u8>, counter: u8) -> String {
@@ -382,7 +382,7 @@ pub fn extract_extension_info(data: Vec<u8>, counter: u8) -> String {
     format!("{}|{}", alpn, formatted_types)
 }
 
-pub fn add_formatting_hyphen(types: &Vec<&[u8]>) -> String {
+pub fn add_formatting_hyphen(types: &[&[u8]]) -> String {
     let types_hex_encoded: Vec<String> = types.iter().map(
         |t| hex::encode(t)
     ).collect();
@@ -407,5 +407,5 @@ pub fn find_extension(types: &Vec<&[u8]>, values: Vec<Option<&[u8]>>) -> String 
         }
         i += 1
     }
-    return "".to_string();
+    "".to_string()
 }
