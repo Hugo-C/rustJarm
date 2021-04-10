@@ -121,24 +121,22 @@ pub fn get_ciphers(jarm_details: &PacketSpecification) -> Vec<u8> {
     // TODO implement all
     let mut selected_ciphers = Vec::new();
 
-    let list = match jarm_details.cipher_list {
+    let mut list = match jarm_details.cipher_list {
         CipherList::ALL => {
-            vec![b"\x00\x16", b"\x00\x33", b"\x00\x67", b"\xc0\x9e", b"\xc0\xa2", b"\x00\x9e", b"\x00\x39", b"\x00\x6b",
-                b"\xc0\x9f", b"\xc0\xa3", b"\x00\x9f", b"\x00\x45", b"\x00\xbe", b"\x00\x88", b"\x00\xc4", b"\x00\x9a",
-                b"\xc0\x08", b"\xc0\x09", b"\xc0\x23", b"\xc0\xac", b"\xc0\xae", b"\xc0\x2b", b"\xc0\x0a", b"\xc0\x24",
-                b"\xc0\xad", b"\xc0\xaf", b"\xc0\x2c", b"\xc0\x72", b"\xc0\x73", b"\xcc\xa9", b"\x13\x02", b"\x13\x01",
-                b"\xcc\x14", b"\xc0\x07", b"\xc0\x12", b"\xc0\x13", b"\xc0\x27", b"\xc0\x2f", b"\xc0\x14", b"\xc0\x28",
-                b"\xc0\x30", b"\xc0\x60", b"\xc0\x61", b"\xc0\x76", b"\xc0\x77", b"\xcc\xa8", b"\x13\x05", b"\x13\x04",
-                b"\x13\x03", b"\xcc\x13", b"\xc0\x11", b"\x00\x0a", b"\x00\x2f", b"\x00\x3c", b"\xc0\x9c", b"\xc0\xa0",
-                b"\x00\x9c", b"\x00\x35", b"\x00\x3d", b"\xc0\x9d", b"\xc0\xa1", b"\x00\x9d", b"\x00\x41", b"\x00\xba",
-                b"\x00\x84", b"\x00\xc0", b"\x00\x07", b"\x00\x04", b"\x00\x05"]
+            vec![b"\x00\x16".to_vec(), b"\x00\x33".to_vec(), b"\x00\x67".to_vec(), b"\xc0\x9e".to_vec(), b"\xc0\xa2".to_vec(), b"\x00\x9e".to_vec(), b"\x00\x39".to_vec(), b"\x00\x6b".to_vec(),
+                b"\xc0\x9f".to_vec(), b"\xc0\xa3".to_vec(), b"\x00\x9f".to_vec(), b"\x00\x45".to_vec(), b"\x00\xbe".to_vec(), b"\x00\x88".to_vec(), b"\x00\xc4".to_vec(), b"\x00\x9a".to_vec(),
+                b"\xc0\x08".to_vec(), b"\xc0\x09".to_vec(), b"\xc0\x23".to_vec(), b"\xc0\xac".to_vec(), b"\xc0\xae".to_vec(), b"\xc0\x2b".to_vec(), b"\xc0\x0a".to_vec(), b"\xc0\x24".to_vec(),
+                b"\xc0\xad".to_vec(), b"\xc0\xaf".to_vec(), b"\xc0\x2c".to_vec(), b"\xc0\x72".to_vec(), b"\xc0\x73".to_vec(), b"\xcc\xa9".to_vec(), b"\x13\x02".to_vec(), b"\x13\x01".to_vec(),
+                b"\xcc\x14".to_vec(), b"\xc0\x07".to_vec(), b"\xc0\x12".to_vec(), b"\xc0\x13".to_vec(), b"\xc0\x27".to_vec(), b"\xc0\x2f".to_vec(), b"\xc0\x14".to_vec(), b"\xc0\x28".to_vec(),
+                b"\xc0\x30".to_vec(), b"\xc0\x60".to_vec(), b"\xc0\x61".to_vec(), b"\xc0\x76".to_vec(), b"\xc0\x77".to_vec(), b"\xcc\xa8".to_vec(), b"\x13\x05".to_vec(), b"\x13\x04".to_vec(),
+                b"\x13\x03".to_vec(), b"\xcc\x13".to_vec(), b"\xc0\x11".to_vec(), b"\x00\x0a".to_vec(), b"\x00\x2f".to_vec(), b"\x00\x3c".to_vec(), b"\xc0\x9c".to_vec(), b"\xc0\xa0".to_vec(),
+                b"\x00\x9c".to_vec(), b"\x00\x35".to_vec(), b"\x00\x3d".to_vec(), b"\xc0\x9d".to_vec(), b"\xc0\xa1".to_vec(), b"\x00\x9d".to_vec(), b"\x00\x41".to_vec(), b"\x00\xba".to_vec(),
+                b"\x00\x84".to_vec(), b"\x00\xc0".to_vec(), b"\x00\x07".to_vec(), b"\x00\x04".to_vec(), b"\x00\x05".to_vec()]
         }
         CipherList::NO1_3 => {todo!()}
     };
 
-    if jarm_details.cipher_order != CipherOrder::FORWARD {
-        todo!()
-    }
+    cipher_mung(&mut list, &jarm_details.cipher_order);
     if jarm_details.use_grease {
         todo!()
     }
