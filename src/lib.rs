@@ -246,8 +246,30 @@ pub fn cipher_mung(ciphers: &mut Vec<Vec<u8>>, cipher_order: &CipherOrder) {
     match cipher_order {
         CipherOrder::FORWARD => {}  // nothing to do
         CipherOrder::REVERSE => { ciphers.reverse() }
-        CipherOrder::TOP_HALF => { todo!() }
-        CipherOrder::BOTTOM_HALF => { todo!() }
+        CipherOrder::TOP_HALF => {
+            // Top half gets the middle cipher if needed
+            let middle_one = if ciphers.len() % 2 == 1 {
+                Some(ciphers[ciphers.len() / (2 as usize)].clone())
+            } else {
+                None
+            };
+            cipher_mung(ciphers, &CipherOrder::REVERSE);
+            cipher_mung(ciphers, &CipherOrder::BOTTOM_HALF);
+
+            match middle_one {
+                Some(x) => { ciphers.insert(0, x); }
+                None => {}
+            }
+        }
+        CipherOrder::BOTTOM_HALF => {
+            let mut range_to_drain = 0..ciphers.len() / 2;
+            if ciphers.len() % 2 == 1 {
+                // Also remove the middle one if the length is odd
+                range_to_drain.end += 1;
+            }
+            ciphers.drain(range_to_drain);
+
+        }
         CipherOrder::MIDDLE_OUT => { todo!() }
     }
 }
