@@ -257,16 +257,15 @@ pub fn cipher_mung(ciphers: &mut Vec<Vec<u8>>, cipher_order: &CipherOrder) {
         CipherOrder::TOP_HALF => {
             // Top half gets the middle cipher if needed
             let middle_one = if ciphers.len() % 2 == 1 {
-                Some(ciphers[ciphers.len() / (2 as usize)].clone())
+                Some(ciphers[ciphers.len() / 2].clone())
             } else {
                 None
             };
             cipher_mung(ciphers, &CipherOrder::REVERSE);
             cipher_mung(ciphers, &CipherOrder::BOTTOM_HALF);
 
-            match middle_one {
-                Some(x) => { ciphers.insert(0, x); }
-                None => {}
+            if let Some(x) = middle_one {
+                ciphers.insert(0, x);
             }
         }
         CipherOrder::BOTTOM_HALF => {
@@ -411,14 +410,12 @@ pub fn extract_extension_info(data: Vec<u8>, counter: u8) -> String {
 }
 
 pub fn add_formatting_hyphen(types: &[&[u8]]) -> String {
-    let types_hex_encoded: Vec<String> = types.iter().map(
-        |t| hex::encode(t)
-    ).collect();
+    let types_hex_encoded: Vec<String> = types.iter().map(hex::encode).collect();
     types_hex_encoded.join("-")
 }
 
 
-pub fn find_extension(types: &Vec<&[u8]>, values: Vec<Option<&[u8]>>) -> String {
+pub fn find_extension(types: &[&[u8]], values: Vec<Option<&[u8]>>) -> String {
     let mut i = 0;
     while i < types.len() {
         if types.get(i).unwrap() == ALPN_EXTENSION {
