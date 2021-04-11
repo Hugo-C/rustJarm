@@ -211,7 +211,15 @@ pub fn extension_server_name(jarm_details: &PacketSpecification) -> Vec<u8> {
 pub fn aplns(jarm_details: &PacketSpecification) -> Vec<u8> {
     let mut ext = b"\x00\x10".to_vec();
     let mut alpns: Vec<Vec<u8>> = if jarm_details.use_rare_apln {
-        todo!()
+        vec![
+            b"\x08\x68\x74\x74\x70\x2f\x30\x2e\x39".to_vec(),
+            b"\x08\x68\x74\x74\x70\x2f\x31\x2e\x30".to_vec(),
+            b"\x06\x73\x70\x64\x79\x2f\x31".to_vec(),
+            b"\x06\x73\x70\x64\x79\x2f\x32".to_vec(),
+            b"\x06\x73\x70\x64\x79\x2f\x33".to_vec(),
+            b"\x03\x68\x32\x63".to_vec(),
+            b"\x02\x68\x71".to_vec(),
+        ]
     } else {
         vec![
             b"\x08\x68\x74\x74\x70\x2f\x30\x2e\x39".to_vec(),
