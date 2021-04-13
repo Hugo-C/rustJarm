@@ -70,7 +70,10 @@ pub fn build_packet(jarm_details: &PacketSpecification) -> Vec<u8> {
             payload.extend(b"\x03\x03");
             client_hello.extend(b"\x03\x03");
         }
-        TlsVersion::TLS1_3 => { todo!()}  // TODO / TOTEST
+        TlsVersion::TLS1_3 => {
+            payload.extend(b"\x03\x01");
+            client_hello.extend(b"\x03\x03");
+        }
     }
 
     client_hello.extend(random_bytes());
