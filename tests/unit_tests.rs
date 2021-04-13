@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use jarm::{PacketSpecification, TlsVersion, CipherList, CipherOrder, TlsVersionSupport, random_bytes};
+    use jarm::{PacketSpecification, TlsVersion, CipherList, CipherOrder, TlsVersionSupport, random_bytes, random_grease};
 
     #[test]
     fn test_build_tls_1_2() {
@@ -84,6 +84,26 @@ mod tests {
     }
 
     #[test]
+    fn test_build_tls_1_2_middle_out() {
+        let expected_packet = b"\x16\x03\x03\x01\xa9\x01\x00\x01\xa5\x03\x03******************************** ********************************\x00\x8c\n\n\xc0\x12\xc0\x13\xc0\x07\xc0'\xcc\x14\xc0/\x13\x01\xc0\x14\x13\x02\xc0(\xcc\xa9\xc00\xc0s\xc0`\xc0r\xc0a\xc0,\xc0v\xc0\xaf\xc0w\xc0\xad\xcc\xa8\xc0$\x13\x05\xc0\n\x13\x04\xc0+\x13\x03\xc0\xae\xcc\x13\xc0\xac\xc0\x11\xc0#\x00\n\xc0\t\x00/\xc0\x08\x00<\x00\x9a\xc0\x9c\x00\xc4\xc0\xa0\x00\x88\x00\x9c\x00\xbe\x005\x00E\x00=\x00\x9f\xc0\x9d\xc0\xa3\xc0\xa1\xc0\x9f\x00\x9d\x00k\x00A\x009\x00\xba\x00\x9e\x00\x84\xc0\xa2\x00\xc0\xc0\x9e\x00\x07\x00g\x00\x04\x003\x00\x05\x00\x16\x01\x00\x00\xd0\n\n\x00\x00\x00\x00\x00!\x00\x1f\x00\x00\x1cjsonplaceholder.typicode.com\x00\x17\x00\x00\x00\x01\x00\x01\x01\xff\x01\x00\x01\x00\x00\n\x00\n\x00\x08\x00\x1d\x00\x17\x00\x18\x00\x19\x00\x0b\x00\x02\x01\x00\x00#\x00\x00\x00\x10\x000\x00.\x02hq\x03h2c\x06spdy/3\x06spdy/2\x06spdy/1\x08http/1.0\x08http/0.9\x00\r\x00\x14\x00\x12\x04\x03\x08\x04\x04\x01\x05\x03\x08\x05\x05\x01\x08\x06\x06\x01\x02\x01\x003\x00+\x00)\n\n\x00\x01\x00\x00\x1d\x00 ********************************\x00-\x00\x02\x01\x01".to_vec();
+
+        let tls_1_2_spec = PacketSpecification {
+            host: "jsonplaceholder.typicode.com".to_string(),
+            port: "443".to_string(),
+            tls_version: TlsVersion::TLS1_2,
+            cipher_list: CipherList::ALL,
+            cipher_order: CipherOrder::MIDDLE_OUT,
+            use_grease: true,
+            use_rare_apln: true,
+            tls_version_support: TlsVersionSupport::NO_SUPPORT,
+            extension_order: CipherOrder::REVERSE,
+        };
+
+        let packet = jarm::build_packet(&tls_1_2_spec);
+        assert_eq!(packet, expected_packet);
+    }
+
+    #[test]
     fn test_get_ciphers_tls_1_2() {
         let expected_ciphers = b"\x00\x16\x003\x00g\xc0\x9e\xc0\xa2\x00\x9e\x009\x00k\xc0\x9f\xc0\xa3\x00\x9f\x00E\x00\xbe\x00\x88\x00\xc4\x00\x9a\xc0\x08\xc0\t\xc0#\xc0\xac\xc0\xae\xc0+\xc0\n\xc0$\xc0\xad\xc0\xaf\xc0,\xc0r\xc0s\xcc\xa9\x13\x02\x13\x01\xcc\x14\xc0\x07\xc0\x12\xc0\x13\xc0'\xc0/\xc0\x14\xc0(\xc00\xc0`\xc0a\xc0v\xc0w\xcc\xa8\x13\x05\x13\x04\x13\x03\xcc\x13\xc0\x11\x00\n\x00/\x00<\xc0\x9c\xc0\xa0\x00\x9c\x005\x00=\xc0\x9d\xc0\xa1\x00\x9d\x00A\x00\xba\x00\x84\x00\xc0\x00\x07\x00\x04\x00\x05".to_vec();
 
@@ -96,6 +116,26 @@ mod tests {
             use_grease: false,
             use_rare_apln: false,
             tls_version_support: TlsVersionSupport::TLS1_2,
+            extension_order: CipherOrder::REVERSE,
+        };
+
+        let packet = jarm::get_ciphers(&tls_1_2_spec);
+        assert_eq!(packet, expected_ciphers);
+    }
+
+    #[test]
+    fn test_get_ciphers_tls_1_2_middle_out_and_grease() {
+        let expected_ciphers = b"\n\n\xc0\x12\xc0\x13\xc0\x07\xc0'\xcc\x14\xc0/\x13\x01\xc0\x14\x13\x02\xc0(\xcc\xa9\xc00\xc0s\xc0`\xc0r\xc0a\xc0,\xc0v\xc0\xaf\xc0w\xc0\xad\xcc\xa8\xc0$\x13\x05\xc0\n\x13\x04\xc0+\x13\x03\xc0\xae\xcc\x13\xc0\xac\xc0\x11\xc0#\x00\n\xc0\t\x00/\xc0\x08\x00<\x00\x9a\xc0\x9c\x00\xc4\xc0\xa0\x00\x88\x00\x9c\x00\xbe\x005\x00E\x00=\x00\x9f\xc0\x9d\xc0\xa3\xc0\xa1\xc0\x9f\x00\x9d\x00k\x00A\x009\x00\xba\x00\x9e\x00\x84\xc0\xa2\x00\xc0\xc0\x9e\x00\x07\x00g\x00\x04\x003\x00\x05\x00\x16".to_vec();
+
+        let tls_1_2_spec = PacketSpecification {
+            host: "jsonplaceholder.typicode.com".to_string(),
+            port: "443".to_string(),
+            tls_version: TlsVersion::TLS1_2,
+            cipher_list: CipherList::ALL,
+            cipher_order: CipherOrder::MIDDLE_OUT,
+            use_grease: true,
+            use_rare_apln: true,
+            tls_version_support: TlsVersionSupport::NO_SUPPORT,
             extension_order: CipherOrder::REVERSE,
         };
 
@@ -284,6 +324,60 @@ mod tests {
     }
 
     #[test]
+    fn test_cipher_mung_middle_out() {
+        let mut input_ciphers = vec![
+            b"\x02hq".to_vec(),
+            b"\x03h2c".to_vec(),
+            b"\x06spdy/3\x02h2".to_vec(),
+            b"\x06spdy/2".to_vec(),
+            b"\x06spdy/1".to_vec(),
+            b"\x08http/1.1".to_vec(),
+            b"\x08http/1.0".to_vec(),
+            b"\x08http/0.9".to_vec(),
+        ];
+
+        let expected_ciphers_output = vec![
+            b"\x06spdy/1".to_vec(),
+            b"\x06spdy/2".to_vec(),
+            b"\x08http/1.1".to_vec(),
+            b"\x06spdy/3\x02h2".to_vec(),
+            b"\x08http/1.0".to_vec(),
+            b"\x03h2c".to_vec(),
+            b"\x08http/0.9".to_vec(),
+            b"\x02hq".to_vec(),
+        ];
+
+        jarm::cipher_mung(&mut input_ciphers, &CipherOrder::MIDDLE_OUT);
+        assert_eq!(input_ciphers, expected_ciphers_output);
+    }
+
+    #[test]
+    fn test_cipher_mung_middle_out_odd() {
+        let mut input_ciphers = vec![
+            b"\x02hq".to_vec(),
+            b"\x03h2c".to_vec(),
+            b"\x06spdy/3\x02h2".to_vec(),
+            b"\x06spdy/2".to_vec(),
+            b"\x06spdy/1".to_vec(),
+            b"\x08http/1.1".to_vec(),
+            b"\x08http/1.0".to_vec(),
+        ];
+
+        let expected_ciphers_output = vec![
+            b"\x06spdy/2".to_vec(),
+            b"\x06spdy/1".to_vec(),
+            b"\x06spdy/3\x02h2".to_vec(),
+            b"\x08http/1.1".to_vec(),
+            b"\x03h2c".to_vec(),
+            b"\x08http/1.0".to_vec(),
+            b"\x02hq".to_vec(),
+        ];
+
+        jarm::cipher_mung(&mut input_ciphers, &CipherOrder::MIDDLE_OUT);
+        assert_eq!(input_ciphers, expected_ciphers_output);
+    }
+
+    #[test]
     fn test_key_share() {
         let expected_key_share = b"\x003\x00&\x00$\x00\x1d\x00 ********************************".to_vec();
         assert_eq!(jarm::key_share(false), expected_key_share);
@@ -349,6 +443,12 @@ mod tests {
     fn test_mocked_random_bytes() {
         let expected_mock_value: Vec<u8> = b"********************************".to_vec();
         assert_eq!(random_bytes(), expected_mock_value);
+    }
+
+    #[test]
+    fn test_mocked_random_grease() {
+        let expected_mock_value: Vec<u8> = b"\x0a\x0a".to_vec();
+        assert_eq!(random_grease(), expected_mock_value);
     }
 
     #[test]

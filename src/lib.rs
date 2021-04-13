@@ -1,4 +1,5 @@
 use rand::{thread_rng, Rng};
+use rand::seq::SliceRandom;
 
 const ALPN_EXTENSION: &[u8; 2] = b"\x00\x10";
 
@@ -100,6 +101,34 @@ pub fn random_bytes() -> Vec<u8> {
     vec![42; 32]
 }
 
+// mocked version TODO find a way to use it only for tests
+pub fn random_grease() -> Vec<u8> {
+    b"\x0a\x0a".to_vec()
+}
+
+// #[cfg(not(test))]
+// pub fn grease() -> Vec<u8> {
+//     let grease_list = vec![
+//         b"\x0a\x0a".to_vec(),
+//         b"\x1a\x1a".to_vec(),
+//         b"\x2a\x2a".to_vec(),
+//         b"\x3a\x3a".to_vec(),
+//         b"\x4a\x4a".to_vec(),
+//         b"\x5a\x5a".to_vec(),
+//         b"\x6a\x6a".to_vec(),
+//         b"\x7a\x7a".to_vec(),
+//         b"\x8a\x8a".to_vec(),
+//         b"\x9a\x9a".to_vec(),
+//         b"\xaa\xaa".to_vec(),
+//         b"\xba\xba".to_vec(),
+//         b"\xca\xca".to_vec(),
+//         b"\xda\xda".to_vec(),
+//         b"\xea\xea".to_vec(),
+//         b"\xfa\xfa".to_vec(),
+//     ];
+//     grease_list.choose(&mut rand::thread_rng()).unwrap().clone()
+// }
+
 // #[cfg(not(test))]
 // pub fn random_bytes() -> Vec<u8> {
 //     let mut rng = thread_rng();
@@ -138,7 +167,7 @@ pub fn get_ciphers(jarm_details: &PacketSpecification) -> Vec<u8> {
 
     cipher_mung(&mut list, &jarm_details.cipher_order);
     if jarm_details.use_grease {
-        todo!()
+        list.insert(0, random_grease());
     }
 
     for x in list {
@@ -152,7 +181,8 @@ pub fn get_extensions(jarm_details: &PacketSpecification) -> Vec<u8> {
     let mut all_extensions = Vec::new();
 
     if jarm_details.use_grease {
-        todo!()
+        all_extensions.extend(random_grease());
+        all_extensions.extend(b"\x00\x00".to_vec());
     }
     all_extensions.extend(extension_server_name(jarm_details));
 
@@ -277,7 +307,25 @@ pub fn cipher_mung(ciphers: &mut Vec<Vec<u8>>, cipher_order: &CipherOrder) {
             ciphers.drain(range_to_drain);
 
         }
-        CipherOrder::MIDDLE_OUT => { todo!() }
+        CipherOrder::MIDDLE_OUT => {
+            let middle = ciphers.len() / 2;
+            let mut output = Vec::new();
+            if ciphers.len() % 2 == 1 {
+                // output.append(ciphers[middle])
+                output.push(ciphers[middle].clone());
+
+                for i in 1..middle+1 {
+                    output.push(ciphers[middle + i].clone());
+                    output.push(ciphers[middle - i].clone());
+                }
+            } else {
+                for i in 1..middle+1 {
+                    output.push(ciphers[middle - 1 + i].clone());
+                    output.push(ciphers[middle - i].clone());
+                }
+            }
+            *ciphers = output;
+        }
     }
 }
 
@@ -285,7 +333,9 @@ pub fn key_share(grease: bool) -> Vec<u8> {
     let mut ext = b"\x00\x33".to_vec();
 
     let mut share_ext = if grease {
-        todo!()
+        let mut grease_start = random_grease();
+        grease_start.extend(b"\x00\x01\x00".to_vec());
+        grease_start
     } else {
         Vec::new()
     };
