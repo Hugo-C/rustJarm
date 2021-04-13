@@ -379,7 +379,7 @@ pub fn supported_versions(jarm_details: &PacketSpecification) -> Vec<u8> {
     // Assemble the extension
     let mut ext = b"\x00\x2b".to_vec();
     let mut versions = if jarm_details.use_grease {
-        todo!()
+        random_grease()
     } else {
         Vec::new()
     };
