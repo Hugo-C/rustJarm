@@ -62,7 +62,10 @@ pub fn build_packet(jarm_details: &PacketSpecification) -> Vec<u8> {
     let mut payload= b"\x16".to_vec();
 
     match jarm_details.tls_version {
-        TlsVersion::TLS1_1 => { unimplemented!() }
+        TlsVersion::TLS1_1 => {
+            payload.extend(b"\x03\x02");
+            client_hello.extend(b"\x03\x02");
+        }
         TlsVersion::TLS1_2 => {
             payload.extend(b"\x03\x03");
             client_hello.extend(b"\x03\x03");
@@ -182,7 +185,7 @@ pub fn get_extensions(jarm_details: &PacketSpecification) -> Vec<u8> {
 
     if jarm_details.use_grease {
         all_extensions.extend(random_grease());
-        all_extensions.extend(b"\x00\x00".to_vec());
+        all_extensions.extend(b"\x00\x00");
     }
     all_extensions.extend(extension_server_name(jarm_details));
 
@@ -334,7 +337,7 @@ pub fn key_share(grease: bool) -> Vec<u8> {
 
     let mut share_ext = if grease {
         let mut grease_start = random_grease();
-        grease_start.extend(b"\x00\x01\x00".to_vec());
+        grease_start.extend(b"\x00\x01\x00");
         grease_start
     } else {
         Vec::new()
