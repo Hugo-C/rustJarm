@@ -1,6 +1,62 @@
 #[cfg(test)]
 mod tests {
-    use jarm::{PacketSpecification, TlsVersion, CipherList, CipherOrder, TlsVersionSupport, random_bytes, random_grease};
+    use jarm::{PacketSpecification, TlsVersion, CipherList, CipherOrder, TlsVersionSupport, random_bytes, random_grease, Jarm, JarmPart, cipher_bytes, version_byte};
+
+
+    #[test]
+    fn test_jarm_hash() {
+        let expected_hash = "27d27d27d27d27d27d27d27d27d27debd865e63a4441da99411bab3aadfedf".to_string();
+
+        let mut jarm = Jarm::new();
+        jarm.parts = vec![
+            JarmPart::new("c02b|0303|h2|0000-0017-ff01-000b-0023-0010"),
+            JarmPart::new("c02b|0303|h2|0000-0017-ff01-000b-0023-0010"),
+            JarmPart::new("c02b|0303|h2|0000-0017-ff01-000b-0023-0010"),
+            JarmPart::new("c02b|0303|h2|0000-0017-ff01-000b-0023-0010"),
+            JarmPart::new("c02b|0303|h2|0000-0017-ff01-000b-0023-0010"),
+            JarmPart::new("c02b|0303|h2|0000-0017-ff01-000b-0023-0010"),
+            JarmPart::new("c02b|0303|h2|0000-0017-ff01-000b-0023-0010"),
+            JarmPart::new("c02b|0303|h2|0000-0017-ff01-000b-0023-0010"),
+            JarmPart::new("c02b|0303|h2|0000-0017-ff01-000b-0023-0010"),
+            JarmPart::new("c02b|0303|h2|0000-0017-ff01-000b-0023-0010"),
+        ];
+
+        assert_eq!(jarm.hash(), expected_hash);
+    }
+
+    #[test]
+    fn test_cipher_bytes() {  // TODO more cases
+        assert_eq!(cipher_bytes("c02b"), "27");
+    }
+
+    #[test]
+    fn test_version_byte() {
+        assert_eq!(version_byte(""), '0');
+        assert_eq!(version_byte("0301"), 'b');
+        assert_eq!(version_byte("0303"), 'd');
+        assert_eq!(version_byte("0304"), 'e');
+    }
+
+    #[test]
+    fn test_jarm_hash_null() {
+        let expected_hash = String::from_utf8(vec![b'0'; 62]).unwrap();
+
+        let mut jarm = Jarm::new();
+        jarm.parts = vec![
+            JarmPart::new("|||"),
+            JarmPart::new("|||"),
+            JarmPart::new("|||"),
+            JarmPart::new("|||"),
+            JarmPart::new("|||"),
+            JarmPart::new("|||"),
+            JarmPart::new("|||"),
+            JarmPart::new("|||"),
+            JarmPart::new("|||"),
+            JarmPart::new("|||"),
+        ];
+
+        assert_eq!(jarm.hash(), expected_hash);
+    }
 
     #[test]
     fn test_build_tls_1_2() {

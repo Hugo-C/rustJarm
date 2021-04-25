@@ -1,17 +1,62 @@
 use rand::{thread_rng, Rng};
 use rand::seq::SliceRandom;
+use std::str::FromStr;
+use sha2::{Sha256, Digest};
 
 const ALPN_EXTENSION: &[u8; 2] = b"\x00\x10";
 
-pub struct Jarm {
+pub struct JarmPart {
     pub raw: String
 }
 
-impl Jarm {
-    fn new(raw: &str) -> Jarm {
-        Jarm{
+impl JarmPart {
+    pub fn new(raw: &str) -> JarmPart {
+        JarmPart {
             raw: raw.to_string(),
         }
+    }
+}
+
+pub struct Jarm {
+    pub parts: Vec<JarmPart>
+}
+
+impl Default for Jarm {
+    fn default() -> Self {
+        Jarm::new()
+    }
+}
+
+impl Jarm {
+    pub fn new() -> Jarm {
+        Jarm {
+            parts: Vec::new(),
+        }
+    }
+
+    pub fn hash(&self) -> String {
+        if self.parts.iter().all(|p| p.raw == "|||") {
+            return "0".repeat(62);
+        }
+
+        let mut fuzzy_hash = String::new();
+        let mut alpns_and_ext = String::new();
+
+        for part in &self.parts {
+            let components: Vec<&str> = part.raw.split('|').collect();
+            // Custom jarm hash includes a fuzzy hash of the ciphers and versions
+            fuzzy_hash.push_str(&*cipher_bytes(components[0]));
+            fuzzy_hash.push(version_byte(components[1]));
+            alpns_and_ext.push_str(components[2]);
+            alpns_and_ext.push_str(components[3]);
+        }
+
+        // Custom jarm hash has the sha256 of alpns and extensions added to the end
+        let mut hasher = Sha256::new();
+        hasher.update(alpns_and_ext.into_bytes());
+        let sha256 = hex::encode(hasher.finalize());
+        fuzzy_hash.push_str(sha256.get(0..32).unwrap());
+        fuzzy_hash
     }
 }
 
@@ -396,9 +441,9 @@ pub fn supported_versions(jarm_details: &PacketSpecification) -> Vec<u8> {
     ext
 }
 
-pub fn read_packet(data: Vec<u8>) -> Jarm {
+pub fn read_packet(data: Vec<u8>) -> JarmPart {
     if (data[0] != 22) || (data[5] != 2){
-        return Jarm::new("|||");  // Default jarm
+        return JarmPart::new("|||");  // Default jarm
     }
 
     let mut jarm = String::new();
@@ -423,7 +468,7 @@ pub fn read_packet(data: Vec<u8>) -> Jarm {
     // Extract extensions
     let extensions = extract_extension_info(data, counter);
     jarm += &*extensions;
-    Jarm { raw: jarm}
+    JarmPart { raw: jarm}
 }
 
 // Convert bytes array to u32
@@ -500,4 +545,39 @@ pub fn find_extension(types: &[&[u8]], values: Vec<Option<&[u8]>>) -> String {
         i += 1
     }
     "".to_string()
+}
+
+pub fn cipher_bytes(cipher: &str) -> String {
+    let list = vec![
+        b"\x00\x04", b"\x00\x05", b"\x00\x07", b"\x00\x0a", b"\x00\x16", b"\x00\x2f", b"\x00\x33", b"\x00\x35",
+        b"\x00\x39", b"\x00\x3c", b"\x00\x3d", b"\x00\x41", b"\x00\x45", b"\x00\x67", b"\x00\x6b", b"\x00\x84",
+        b"\x00\x88", b"\x00\x9a", b"\x00\x9c", b"\x00\x9d", b"\x00\x9e", b"\x00\x9f", b"\x00\xba", b"\x00\xbe",
+        b"\x00\xc0", b"\x00\xc4", b"\xc0\x07", b"\xc0\x08", b"\xc0\x09", b"\xc0\x0a", b"\xc0\x11", b"\xc0\x12",
+        b"\xc0\x13", b"\xc0\x14", b"\xc0\x23", b"\xc0\x24", b"\xc0\x27", b"\xc0\x28", b"\xc0\x2b", b"\xc0\x2c",
+        b"\xc0\x2f", b"\xc0\x30", b"\xc0\x60", b"\xc0\x61", b"\xc0\x72", b"\xc0\x73", b"\xc0\x76", b"\xc0\x77",
+        b"\xc0\x9c", b"\xc0\x9d", b"\xc0\x9e", b"\xc0\x9f", b"\xc0\xa0", b"\xc0\xa1", b"\xc0\xa2", b"\xc0\xa3",
+        b"\xc0\xac", b"\xc0\xad", b"\xc0\xae", b"\xc0\xaf", b"\xcc\x13", b"\xcc\x14", b"\xcc\xa8", b"\xcc\xa9",
+        b"\x13\x01", b"\x13\x02", b"\x13\x03", b"\x13\x04", b"\x13\x05"
+    ];
+
+    let count = match list.iter().position(|&bytes| hex::encode(bytes) == cipher) {
+        None => { panic!("cipher not expected {:?}", cipher)}
+        Some(index) => { index + 1 }
+    };
+
+    let hex_value = hex::encode(count.to_be_bytes());
+    hex_value.get(hex_value.len() - 2..hex_value.len()).unwrap().to_string()
+}
+
+pub fn version_byte(version: &str) -> char {
+    if version.is_empty() {
+        return '0';
+    }
+    let option = "abcdef".to_string();
+    let version_index: usize = 3;
+    let count: usize = match version.get(version_index..version_index+1) {
+        None => { panic!("version not expected {:?}", version)}
+        Some(str_count) => { usize::from_str(str_count).unwrap() }
+    };
+    option.chars().nth(count).unwrap()
 }
