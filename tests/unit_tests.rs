@@ -7,7 +7,7 @@ mod tests {
     fn test_jarm_hash() {
         let expected_hash = "27d27d27d27d27d27d27d27d27d27debd865e63a4441da99411bab3aadfedf".to_string();
 
-        let mut jarm = Jarm::new();
+        let mut jarm = Jarm::default();
         jarm.parts = vec![
             JarmPart::new("c02b|0303|h2|0000-0017-ff01-000b-0023-0010"),
             JarmPart::new("c02b|0303|h2|0000-0017-ff01-000b-0023-0010"),
@@ -30,6 +30,11 @@ mod tests {
     }
 
     #[test]
+    fn test_cipher_bytes_empty__string() {
+        assert_eq!(cipher_bytes(""), "00");
+    }
+
+    #[test]
     fn test_version_byte() {
         assert_eq!(version_byte(""), '0');
         assert_eq!(version_byte("0301"), 'b');
@@ -41,7 +46,7 @@ mod tests {
     fn test_jarm_hash_null() {
         let expected_hash = String::from_utf8(vec![b'0'; 62]).unwrap();
 
-        let mut jarm = Jarm::new();
+        let mut jarm = Jarm::default();
         jarm.parts = vec![
             JarmPart::new("|||"),
             JarmPart::new("|||"),
@@ -634,6 +639,18 @@ mod tests {
         let input_packet = hex::decode(input_hex).unwrap();
         let input_counter: u8 = 0;
         let expected_result = "h2|0000-0017-ff01-000b-0023-0010";
+
+        let extension = jarm::extract_extension_info(Vec::from(input_packet), input_counter);
+
+        assert_eq!(extension, expected_result);
+    }
+
+    #[test]
+    fn test_extract_extension_info_non_zero_counter() {
+        let input_hex = "160303007a0200007603031d9f05dd4890d4d2d6f1e52ac85ebbe9ef513ae1dec929184898e79fbb85f6c1202a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a130200002e00330024001d0020f55d8616ecdb3aede2b32ec195e1ce736063addc26b3a3a2066d9b1395faef33002b0002030414030300010117030309520c60b16e828fcbb0f4e7b7eff58472a0813912b1d5c92dc7d38d31ae5a226f9616ad8ddcc46716aaac7af43e29811d6c91aa3c45b5ce681297ce7d8856e78833f52ef6980da27f9cd763880e12472b56b181c67d7d68b270494f3bd4aa63951d2a3be43e5f49974d6a3e1466f7be7142c77ef768890444a9a08e7dd582b8ddfe04548e3da334e7480a818ca920360e318904fee523096381ef5b90500c7eb9e60d71d2d3291ca96d7dd966c117d1068685e878ff105330c810615fb257481e12ce616dbdd442124881c3b60f237252c5d1c863457517e4f837fd07db84bd28414ba9b67adcc4386310e861d5506b3cd2bfda4b0ece9451afe369e44ae4c3632c1f2a5098098677bb17d8af11350c99bda022d35f95bec0f0e2a19776b321a65942147d1b2cc95f468b9995bd08e0a1f36b912715fdad4c19b278545000c143171c7ff0929ee79f3ee6617014d5619bcf326d5017029bd559de91aedc32d879f1a9ae7642af4dc704fea1b94bea5b3c83265ac17aba12dde5bec9333a3bc6ff8ff3f232a7470c03cf0c465e0d22634f8fdc5e4d074fa583eb8cb928c1fbce39ba1e3851bb942cb3e56fe9c01ea908e196f9ab657bb3d3890192b7c6a4b5dfd12cd360adf1411ecec667bb3a6aa436449e14dc5ca44eb51723c93e3c009e840bf806d8f86a096d52409cc0b65ef5e0833ba7a88881fe5cff74158f5907744b36d83a183b20ae7cc9a2a2175e9cd8fc41d7e98823f295868b47c1fc7d80efd8ea7ca2c75d0a5d460e5f2cc77540a325a2e15be0496154c4a020737f222e64fdca274097d3c4fd6166ee20c6e7dcc3ca22e45153d075b5e4a82c5525a622a53d22145ac0115f704f6c46db34849bb75c5ed081c4881a596f2482dbaccdb122308fa85801c0c7afcfdceae7bd96c93ac6b4d341cefa3d21b032bb542473a85b091f43baaf195182d1ebc632c9fd2a232ae6183f689b324c550a58ad2c184803504802f71224015f9ec0697f87732e67b4fb3f8ff6a1a19a256bef9364bf81b5b53a71ee43f53be7920ea5820d43277a8140f853a0b5122ccbc4c321af0ebc688294869cbc29a35a87f197288b01a003b88d3e327c77f586c4c3746f6c6763fe0395885b4650a0b8b84d4feb3cb3c481d6d530756d1de4a517393d1669957da443bbc5fb2369595fef8272b17c69ad3e7e66a05f01cf2e194127f88164fb8bf0672c624df9a8462138854c13b7e63d089b9607b1aa86336b17cdb82a68448a51af56911664e87f2e9d04d16132744a5211fc6063ae46b84ba10ab2cd5333406cdaf9bd9c4bd3514fd45305e1bbb24c2df4467ebf5acb2c1fae1ee9e4db8ab464dd0222f7076d7d2e6939bf0c60b2a6cd9c4b5dc0cad0cc5084292b8f3848eda34366e9dad15d8e30b3a64ca67d7f6e26a304331e5a445fc55f76469090728df465471be9320c5d254e32b22a622709ff2427ad852d802a48333165e3615b78b81169b23e4efea11fe353270110db0ee7343af6c4c4ac390e8702e4f175cb25aebb63327482b40b6a60f5d7bb50baa34273a0256097a362bd384e209dcd86732aa7f10cc015d41fe29f3c321f95af23837dfedab6f7a29b686de6f5d7d3ef6e1c72fd6aa83eb6c44f099a8ee68f9d75c8855d9d1b0277d9a427ff6282bf996bb7d2c12d0c4785b8c2c2fc51438d1599e88cdd4c48eddab8ae8cedbb59e41de0536fd68fc454fecea1b289af5b9a1f8874f6b28ac96430765fb455d0f3a40c7fbcc9cde9a019b3b3c1fb30d8c9431dd1a56463bfb816b85ee6ba046d930e2b1d99b9c020b59e65276d6000f7c91784f391233508167407278a548904fd0777f2e2fd581fbda2701e6435eb60bcf6bad0f64c1ab14cf82e03ee1ae6fe752e558b37e263fd0c61";
+        let input_packet = hex::decode(input_hex).unwrap();
+        let input_counter: u8 = 32;
+        let expected_result = "|0033-002b";
 
         let extension = jarm::extract_extension_info(Vec::from(input_packet), input_counter);
 

@@ -2,8 +2,12 @@ use rand::{thread_rng, Rng};
 use rand::seq::SliceRandom;
 use std::str::FromStr;
 use sha2::{Sha256, Digest};
+use std::net::TcpStream;
+use std::io::{Write, Read};
 
 const ALPN_EXTENSION: &[u8; 2] = b"\x00\x10";
+const SOCKET_BUFFER: u64 = 1484;
+
 
 pub struct JarmPart {
     pub raw: String
@@ -18,23 +22,163 @@ impl JarmPart {
 }
 
 pub struct Jarm {
-    pub parts: Vec<JarmPart>
+    pub parts: Vec<JarmPart>,
+    pub queue: Vec<PacketSpecification>,
 }
 
 impl Default for Jarm {
     fn default() -> Self {
-        Jarm::new()
+        Jarm::new("localhost".to_string(), "80".to_string())
     }
 }
 
 impl Jarm {
-    pub fn new() -> Jarm {
+    pub fn new(host: String, port: String) -> Jarm {
         Jarm {
             parts: Vec::new(),
+            queue: vec![
+                //<editor-fold defaultstate="collapsed" desc="Packets and formats to send">
+                PacketSpecification {
+                    host: host.clone(),
+                    port: port.clone(),
+                    tls_version: TlsVersion::TLS1_2,
+                    cipher_list: CipherList::ALL,
+                    cipher_order: CipherOrder::FORWARD,
+                    use_grease: false,
+                    use_rare_apln: false,
+                    tls_version_support: TlsVersionSupport::TLS1_2,
+                    extension_order: CipherOrder::REVERSE,
+                },
+                PacketSpecification {
+                    host: host.clone(),
+                    port: port.clone(),
+                    tls_version: TlsVersion::TLS1_2,
+                    cipher_list: CipherList::ALL,
+                    cipher_order: CipherOrder::REVERSE,
+                    use_grease: false,
+                    use_rare_apln: false,
+                    tls_version_support: TlsVersionSupport::TLS1_2,
+                    extension_order: CipherOrder::FORWARD,
+                },
+                PacketSpecification {
+                    host: host.clone(),
+                    port: port.clone(),
+                    tls_version: TlsVersion::TLS1_2,
+                    cipher_list: CipherList::ALL,
+                    cipher_order: CipherOrder::TOP_HALF,
+                    use_grease: false,
+                    use_rare_apln: false,
+                    tls_version_support: TlsVersionSupport::NO_SUPPORT,
+                    extension_order: CipherOrder::FORWARD,
+                },
+                PacketSpecification {
+                    host: host.clone(),
+                    port: port.clone(),
+                    tls_version: TlsVersion::TLS1_2,
+                    cipher_list: CipherList::ALL,
+                    cipher_order: CipherOrder::BOTTOM_HALF,
+                    use_grease: false,
+                    use_rare_apln: true,
+                    tls_version_support: TlsVersionSupport::NO_SUPPORT,
+                    extension_order: CipherOrder::FORWARD,
+                },
+                PacketSpecification {
+                    host: host.clone(),
+                    port: port.clone(),
+                    tls_version: TlsVersion::TLS1_2,
+                    cipher_list: CipherList::ALL,
+                    cipher_order: CipherOrder::MIDDLE_OUT,
+                    use_grease: true,
+                    use_rare_apln: true,
+                    tls_version_support: TlsVersionSupport::NO_SUPPORT,
+                    extension_order: CipherOrder::REVERSE,
+                },
+                PacketSpecification {
+                    host: host.clone(),
+                    port: port.clone(),
+                    tls_version: TlsVersion::TLS1_1,
+                    cipher_list: CipherList::ALL,
+                    cipher_order: CipherOrder::FORWARD,
+                    use_grease: false,
+                    use_rare_apln: false,
+                    tls_version_support: TlsVersionSupport::NO_SUPPORT,
+                    extension_order: CipherOrder::FORWARD,
+                },
+                PacketSpecification {
+                    host: host.clone(),
+                    port: port.clone(),
+                    tls_version: TlsVersion::TLS1_3,
+                    cipher_list: CipherList::ALL,
+                    cipher_order: CipherOrder::FORWARD,
+                    use_grease: false,
+                    use_rare_apln: false,
+                    tls_version_support: TlsVersionSupport::TLS1_3,
+                    extension_order: CipherOrder::REVERSE,
+                },
+                PacketSpecification {
+                    host: host.clone(),
+                    port: port.clone(),
+                    tls_version: TlsVersion::TLS1_3,
+                    cipher_list: CipherList::ALL,
+                    cipher_order: CipherOrder::REVERSE,
+                    use_grease: false,
+                    use_rare_apln: false,
+                    tls_version_support: TlsVersionSupport::TLS1_3,
+                    extension_order: CipherOrder::FORWARD,
+                },
+                PacketSpecification {
+                    host: host.clone(),
+                    port: port.clone(),
+                    tls_version: TlsVersion::TLS1_3,
+                    cipher_list: CipherList::NO1_3,
+                    cipher_order: CipherOrder::FORWARD,
+                    use_grease: false,
+                    use_rare_apln: false,
+                    tls_version_support: TlsVersionSupport::TLS1_3,
+                    extension_order: CipherOrder::FORWARD,
+                },
+                PacketSpecification {
+                    host: host.clone(),
+                    port: port.clone(),
+                    tls_version: TlsVersion::TLS1_3,
+                    cipher_list: CipherList::ALL,
+                    cipher_order: CipherOrder::MIDDLE_OUT,
+                    use_grease: true,
+                    use_rare_apln: false,
+                    tls_version_support: TlsVersionSupport::TLS1_3,
+                    extension_order: CipherOrder::REVERSE,
+                },
+                //</editor-fold>
+            ],
         }
     }
 
-    pub fn hash(&self) -> String {
+    pub fn retrieve_parts(&mut self) {
+        for spec in &self.queue {
+            let payload = build_packet(&spec);
+
+            // Send packet
+            let url = format!("{}:{}", spec.host, spec.port);
+            let mut data = [0_u8; SOCKET_BUFFER as usize];
+            match TcpStream::connect(url) {
+                Ok(mut stream) => {
+                    stream.write(&payload).unwrap();
+                    let mut handle = stream.take(SOCKET_BUFFER);
+                    handle.read(&mut data).unwrap();
+                },
+                Err(e) => {
+                    panic!("Failed to connect: {}", e);
+                }
+            }
+            let jarm_part = read_packet(Vec::from(data));
+            &self.parts.push(jarm_part);
+        }
+    }
+
+    pub fn hash(&mut self) -> String {
+        if self.parts.is_empty(){
+            self.retrieve_parts()
+        }
         if self.parts.iter().all(|p| p.raw == "|||") {
             return "0".repeat(62);
         }
@@ -337,7 +481,6 @@ pub fn aplns(jarm_details: &PacketSpecification) -> Vec<u8> {
     let first_length = second_length + 2;
     ext.extend(pack_as_unsigned_short(first_length));
     ext.extend(pack_as_unsigned_short(second_length));
-    eprintln!("ext = {:?}", ext);
     ext.extend(all_alpns);
     ext
 }
@@ -486,8 +629,9 @@ pub fn extract_extension_info(data: Vec<u8>, counter: u8) -> String {
 
     // Collect types and value
     let mut count = 49 + counter as u32;
-    let length_start: usize = 47;
-    let length_end: usize = 48;
+    let length_start: usize = (counter + 47) as usize;
+    let length_end: usize = (counter + 48) as usize;
+
     let length_slice: &[u8] = &data[length_start..=length_end];
     let length = as_u32_be(length_slice);
     let maximum = length + (count - 1);
@@ -548,6 +692,10 @@ pub fn find_extension(types: &[&[u8]], values: Vec<Option<&[u8]>>) -> String {
 }
 
 pub fn cipher_bytes(cipher: &str) -> String {
+    if cipher == "" {
+        return "00".to_string()
+    }
+
     let list = vec![
         b"\x00\x04", b"\x00\x05", b"\x00\x07", b"\x00\x0a", b"\x00\x16", b"\x00\x2f", b"\x00\x33", b"\x00\x35",
         b"\x00\x39", b"\x00\x3c", b"\x00\x3d", b"\x00\x41", b"\x00\x45", b"\x00\x67", b"\x00\x6b", b"\x00\x84",
@@ -559,7 +707,6 @@ pub fn cipher_bytes(cipher: &str) -> String {
         b"\xc0\xac", b"\xc0\xad", b"\xc0\xae", b"\xc0\xaf", b"\xcc\x13", b"\xcc\x14", b"\xcc\xa8", b"\xcc\xa9",
         b"\x13\x01", b"\x13\x02", b"\x13\x03", b"\x13\x04", b"\x13\x05"
     ];
-
     let count = match list.iter().position(|&bytes| hex::encode(bytes) == cipher) {
         None => { panic!("cipher not expected {:?}", cipher)}
         Some(index) => { index + 1 }
