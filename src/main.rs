@@ -1,7 +1,4 @@
-use std::net::{TcpStream};
-use std::io::{Read, Write, Error};
-use std::str::from_utf8;
-use jarm::{build_packet, read_packet, PacketSpecification, TlsVersion, CipherList, CipherOrder, TlsVersionSupport, Jarm};
+use jarm::Jarm;
 
 fn main() {
     let host = "jsonplaceholder.typicode.com".to_string();

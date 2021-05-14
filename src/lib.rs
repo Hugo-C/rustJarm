@@ -138,8 +138,8 @@ impl Jarm {
                     extension_order: CipherOrder::FORWARD,
                 },
                 PacketSpecification {
-                    host: host.clone(),
-                    port: port.clone(),
+                    host,
+                    port,
                     tls_version: TlsVersion::TLS1_3,
                     cipher_list: CipherList::ALL,
                     cipher_order: CipherOrder::MIDDLE_OUT,
@@ -162,16 +162,19 @@ impl Jarm {
             let mut data = [0_u8; SOCKET_BUFFER as usize];
             match TcpStream::connect(url) {
                 Ok(mut stream) => {
-                    stream.write(&payload).unwrap();
+                    stream.write_all(&payload).unwrap();
                     let mut handle = stream.take(SOCKET_BUFFER);
-                    handle.read(&mut data).unwrap();
+                    let read_result = handle.read(&mut data);
+                    if read_result.is_err() {
+                        panic!("Couldn't read server response");
+                    }
                 },
                 Err(e) => {
                     panic!("Failed to connect: {}", e);
                 }
             }
             let jarm_part = read_packet(Vec::from(data));
-            &self.parts.push(jarm_part);
+            self.parts.push(jarm_part);
         }
     }
 
@@ -692,7 +695,7 @@ pub fn find_extension(types: &[&[u8]], values: Vec<Option<&[u8]>>) -> String {
 }
 
 pub fn cipher_bytes(cipher: &str) -> String {
-    if cipher == "" {
+    if cipher.is_empty() {
         return "00".to_string()
     }
 
