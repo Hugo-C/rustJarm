@@ -6,5 +6,5 @@ fn main() {
     let jarm_hash = Jarm::new(host, port).hash();
     println!("JARM hash: {:?}", jarm_hash);
     assert_eq!(jarm_hash, "27d3ed3ed0003ed1dc42d43d00041d6183ff1bfae51ebd88d70384363d525c".to_string());
-    println!("Terminated.");
+    println!("Done");
 }
