@@ -19,4 +19,4 @@ check [main.rs](src/main.rs) for the full example
 
 ## Contribute
 
-All contributions are welcomed to improve the code and the package
+All contributions and/or feedbacks are welcome to improve the code and the package
