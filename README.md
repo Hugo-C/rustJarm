@@ -4,7 +4,7 @@ rustJarm is a library to compute JARM fingerprint. It is a more or less a direct
 
 ## Installation
 
-*cargo crates to be created*
+*cargo crate to be created*
 
 ## Usage
 
