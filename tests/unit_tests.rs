@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use jarm::{PacketSpecification, TlsVersion, CipherList, CipherOrder, TlsVersionSupport, random_bytes, random_grease, Jarm, JarmPart, cipher_bytes, version_byte};
+    use jarm::{PacketSpecification, TlsVersion, CipherList, CipherOrder, TlsVersionSupport, Jarm, JarmPart, cipher_bytes, version_byte, TestRng, JarmRng, PseudoRng};
 
 
     #[test]
@@ -20,6 +20,7 @@ mod tests {
             JarmPart::new("c02b|0303|h2|0000-0017-ff01-000b-0023-0010"),
             JarmPart::new("c02b|0303|h2|0000-0017-ff01-000b-0023-0010"),
         ];
+        jarm.rng = Box::new(TestRng {});  // use the mock rng
 
         assert_eq!(jarm.hash(), expected_hash);
     }
@@ -30,7 +31,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cipher_bytes_empty__string() {
+    fn test_cipher_bytes_empty_string() {
         assert_eq!(cipher_bytes(""), "00");
     }
 
@@ -79,8 +80,9 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_2,
             extension_order: CipherOrder::REVERSE,
         };
+        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_2_spec);
+        let packet = jarm::build_packet(&tls_1_2_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -99,8 +101,9 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_2,
             extension_order: CipherOrder::FORWARD,
         };
+        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_2_spec);
+        let packet = jarm::build_packet(&tls_1_2_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -119,8 +122,10 @@ mod tests {
             tls_version_support: TlsVersionSupport::NO_SUPPORT,
             extension_order: CipherOrder::FORWARD,
         };
+        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_2_spec);
+
+        let packet = jarm::build_packet(&tls_1_2_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -139,8 +144,9 @@ mod tests {
             tls_version_support: TlsVersionSupport::NO_SUPPORT,
             extension_order: CipherOrder::FORWARD,
         };
+        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_2_spec);
+        let packet = jarm::build_packet(&tls_1_2_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -159,8 +165,10 @@ mod tests {
             tls_version_support: TlsVersionSupport::NO_SUPPORT,
             extension_order: CipherOrder::REVERSE,
         };
+        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_2_spec);
+
+        let packet = jarm::build_packet(&tls_1_2_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -179,8 +187,9 @@ mod tests {
             tls_version_support: TlsVersionSupport::NO_SUPPORT,
             extension_order: CipherOrder::FORWARD,
         };
+        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_1_spec);
+        let packet = jarm::build_packet(&tls_1_1_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -199,8 +208,9 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_3,
             extension_order: CipherOrder::REVERSE,
         };
+        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_3_spec);
+        let packet = jarm::build_packet(&tls_1_3_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -219,8 +229,9 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_3,
             extension_order: CipherOrder::FORWARD,
         };
+        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_3_spec);
+        let packet = jarm::build_packet(&tls_1_3_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -239,8 +250,9 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_3,
             extension_order: CipherOrder::FORWARD,
         };
+        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_3_spec);
+        let packet = jarm::build_packet(&tls_1_3_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -259,8 +271,9 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_3,
             extension_order: CipherOrder::REVERSE,
         };
+        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_3_spec);
+        let packet = jarm::build_packet(&tls_1_3_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -279,8 +292,9 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_2,
             extension_order: CipherOrder::REVERSE,
         };
+        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::get_ciphers(&tls_1_2_spec);
+        let packet = jarm::get_ciphers(&tls_1_2_spec, &rng);
         assert_eq!(packet, expected_ciphers);
     }
 
@@ -299,8 +313,9 @@ mod tests {
             tls_version_support: TlsVersionSupport::NO_SUPPORT,
             extension_order: CipherOrder::REVERSE,
         };
+        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::get_ciphers(&tls_1_2_spec);
+        let packet = jarm::get_ciphers(&tls_1_2_spec, &rng);
         assert_eq!(packet, expected_ciphers);
     }
 
@@ -319,8 +334,9 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_2,
             extension_order: CipherOrder::REVERSE,
         };
+        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::get_extensions(&tls_1_2_spec);
+        let packet = jarm::get_extensions(&tls_1_2_spec, &rng);
         assert_eq!(packet, expected_extensions);
     }
 
@@ -541,7 +557,9 @@ mod tests {
     #[test]
     fn test_key_share() {
         let expected_key_share = b"\x003\x00&\x00$\x00\x1d\x00 ********************************".to_vec();
-        assert_eq!(jarm::key_share(false), expected_key_share);
+        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
+
+        assert_eq!(jarm::key_share(false, &rng), expected_key_share);
     }
 
     #[test]
@@ -559,8 +577,9 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_2,
             extension_order: CipherOrder::REVERSE,
         };
+        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        assert_eq!(jarm::supported_versions(&tls_1_2_spec), expected_supported_versions);
+        assert_eq!(jarm::supported_versions(&tls_1_2_spec, &rng), expected_supported_versions);
     }
 
     #[test]
@@ -603,13 +622,31 @@ mod tests {
     #[test]
     fn test_mocked_random_bytes() {
         let expected_mock_value: Vec<u8> = b"********************************".to_vec();
-        assert_eq!(random_bytes(), expected_mock_value);
+        let rng = TestRng {};
+        assert_eq!(rng.random_bytes(), expected_mock_value);
+    }
+
+    #[test]
+    #[cfg_attr(not(feature = "flaky_tests"), ignore = "Use pseudo rng")]
+    fn test_not_mocked_random_bytes() {
+        let expected_mock_value: Vec<u8> = b"********************************".to_vec();
+        let rng = PseudoRng {};
+        assert_ne!(rng.random_bytes(), expected_mock_value);
     }
 
     #[test]
     fn test_mocked_random_grease() {
         let expected_mock_value: Vec<u8> = b"\x0a\x0a".to_vec();
-        assert_eq!(random_grease(), expected_mock_value);
+        let rng = TestRng {};
+        assert_eq!(rng.random_grease(), expected_mock_value);
+    }
+
+    #[test]
+    #[cfg_attr(not(feature = "flaky_tests"), ignore = "Use pseudo rng")]
+    fn test_not_mocked_random_grease() {
+        let expected_mock_value: Vec<u8> = b"\x0a\x0a".to_vec();
+        let rng = PseudoRng {};
+        assert_ne!(rng.random_grease(), expected_mock_value);
     }
 
     #[test]

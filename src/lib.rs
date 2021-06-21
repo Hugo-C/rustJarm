@@ -24,6 +24,7 @@ impl JarmPart {
 pub struct Jarm {
     pub parts: Vec<JarmPart>,
     pub queue: Vec<PacketSpecification>,
+    pub rng: Box<dyn JarmRng + 'static>,
 }
 
 impl Default for Jarm {
@@ -150,12 +151,13 @@ impl Jarm {
                 },
                 //</editor-fold>
             ],
+            rng: Box::new(PseudoRng {})
         }
     }
 
     pub fn retrieve_parts(&mut self) {
         for spec in &self.queue {
-            let payload = build_packet(&spec);
+            let payload = build_packet(&spec, &self.rng);
 
             // Send packet
             let url = format!("{}:{}", spec.host, spec.port);
@@ -249,7 +251,7 @@ pub struct PacketSpecification {
 }
 
 
-pub fn build_packet(jarm_details: &PacketSpecification) -> Vec<u8> {
+pub fn build_packet(jarm_details: &PacketSpecification, rng: &Box<dyn JarmRng>) -> Vec<u8> {
     let mut client_hello = Vec::new();
     let mut payload= b"\x16".to_vec();
 
@@ -268,19 +270,19 @@ pub fn build_packet(jarm_details: &PacketSpecification) -> Vec<u8> {
         }
     }
 
-    client_hello.extend(random_bytes());
-    let session_id = random_bytes();  // TODO mock for unittest
+    client_hello.extend(rng.random_bytes());
+    let session_id = rng.random_bytes();
     let session_id_length = pack_as_unsigned_char(session_id.len());
     client_hello.push(session_id_length);
     client_hello.extend(session_id);
 
-    let cipher_choice = get_ciphers(jarm_details);
+    let cipher_choice = get_ciphers(jarm_details, rng);
     let client_suites_length = pack_as_unsigned_short(cipher_choice.len());
     client_hello.extend(client_suites_length);
     client_hello.extend(cipher_choice);
     client_hello.push(b'\x01');  // cipher methods
     client_hello.push(b'\x00');  // compression_methods
-    client_hello.extend(get_extensions(jarm_details));
+    client_hello.extend(get_extensions(jarm_details, rng));
 
     // Finish packet assembly
     let mut inner_length = b"\x00".to_vec();
@@ -294,45 +296,6 @@ pub fn build_packet(jarm_details: &PacketSpecification) -> Vec<u8> {
     payload
 }
 
-// mocked version TODO find a way to use it only for tests
-pub fn random_bytes() -> Vec<u8> {
-    vec![42; 32]
-}
-
-// mocked version TODO find a way to use it only for tests
-pub fn random_grease() -> Vec<u8> {
-    b"\x0a\x0a".to_vec()
-}
-
-// #[cfg(not(test))]
-// pub fn grease() -> Vec<u8> {
-//     let grease_list = vec![
-//         b"\x0a\x0a".to_vec(),
-//         b"\x1a\x1a".to_vec(),
-//         b"\x2a\x2a".to_vec(),
-//         b"\x3a\x3a".to_vec(),
-//         b"\x4a\x4a".to_vec(),
-//         b"\x5a\x5a".to_vec(),
-//         b"\x6a\x6a".to_vec(),
-//         b"\x7a\x7a".to_vec(),
-//         b"\x8a\x8a".to_vec(),
-//         b"\x9a\x9a".to_vec(),
-//         b"\xaa\xaa".to_vec(),
-//         b"\xba\xba".to_vec(),
-//         b"\xca\xca".to_vec(),
-//         b"\xda\xda".to_vec(),
-//         b"\xea\xea".to_vec(),
-//         b"\xfa\xfa".to_vec(),
-//     ];
-//     grease_list.choose(&mut rand::thread_rng()).unwrap().clone()
-// }
-
-// #[cfg(not(test))]
-// pub fn random_bytes() -> Vec<u8> {
-//     let mut rng = thread_rng();
-//     rng.gen::<[u8; 32]>().to_vec()
-// }
-
 pub fn pack_as_unsigned_char(n: usize) -> u8 {
     if n >= 256 {
         panic!("Can't pack_as_unsigned_char {:?} as it is over 255", n)
@@ -344,7 +307,7 @@ pub fn pack_as_unsigned_short(n: usize) -> Vec<u8> {
     vec![(n >> 8) as u8, n as u8]
 }
 
-pub fn get_ciphers(jarm_details: &PacketSpecification) -> Vec<u8> {
+pub fn get_ciphers(jarm_details: &PacketSpecification, rng: &Box<dyn JarmRng>) -> Vec<u8> {
     // TODO implement all
     let mut selected_ciphers = Vec::new();
 
@@ -376,7 +339,7 @@ pub fn get_ciphers(jarm_details: &PacketSpecification) -> Vec<u8> {
 
     cipher_mung(&mut list, &jarm_details.cipher_order);
     if jarm_details.use_grease {
-        list.insert(0, random_grease());
+        list.insert(0, rng.random_grease());
     }
 
     for x in list {
@@ -385,12 +348,12 @@ pub fn get_ciphers(jarm_details: &PacketSpecification) -> Vec<u8> {
     selected_ciphers
 }
 
-pub fn get_extensions(jarm_details: &PacketSpecification) -> Vec<u8> {
+pub fn get_extensions(jarm_details: &PacketSpecification, rng: &Box<dyn JarmRng>) -> Vec<u8> {
     let mut extension_bytes = Vec::new();
     let mut all_extensions = Vec::new();
 
     if jarm_details.use_grease {
-        all_extensions.extend(random_grease());
+        all_extensions.extend(rng.random_grease());
         all_extensions.extend(b"\x00\x00");
     }
     all_extensions.extend(extension_server_name(jarm_details));
@@ -415,13 +378,13 @@ pub fn get_extensions(jarm_details: &PacketSpecification) -> Vec<u8> {
     all_extensions.extend(signature_algorithms);
 
     // Key share extension
-    all_extensions.extend(key_share(jarm_details.use_grease));
+    all_extensions.extend(key_share(jarm_details.use_grease, rng));
     let psk_key_exchange_modes = b"\x00\x2d\x00\x02\x01\x01";
     all_extensions.extend(psk_key_exchange_modes);
 
     if jarm_details.tls_version == TlsVersion::TLS1_3
         || jarm_details.tls_version_support == TlsVersionSupport::TLS1_2 {
-        all_extensions.extend(supported_versions(jarm_details));
+        all_extensions.extend(supported_versions(jarm_details, rng));
     }
 
     extension_bytes.extend(pack_as_unsigned_short(all_extensions.len()));
@@ -537,11 +500,11 @@ pub fn cipher_mung(ciphers: &mut Vec<Vec<u8>>, cipher_order: &CipherOrder) {
     }
 }
 
-pub fn key_share(grease: bool) -> Vec<u8> {
+pub fn key_share(grease: bool, rng: &Box<dyn JarmRng>) -> Vec<u8> {
     let mut ext = b"\x00\x33".to_vec();
 
     let mut share_ext = if grease {
-        let mut grease_start = random_grease();
+        let mut grease_start = rng.random_grease();
         grease_start.extend(b"\x00\x01\x00");
         grease_start
     } else {
@@ -549,7 +512,7 @@ pub fn key_share(grease: bool) -> Vec<u8> {
     };
     share_ext.extend(b"\x00\x1d");  // group
     share_ext.extend(b"\x00\x20");  // key_exchange_length
-    share_ext.extend(random_bytes());  // key_exchange_length
+    share_ext.extend(rng.random_bytes());  // key_exchange_length
 
     let second_length  = share_ext.len();
     let first_length = second_length + 2;
@@ -559,7 +522,7 @@ pub fn key_share(grease: bool) -> Vec<u8> {
     ext
 }
 
-pub fn supported_versions(jarm_details: &PacketSpecification) -> Vec<u8> {
+pub fn supported_versions(jarm_details: &PacketSpecification, rng: &Box<dyn JarmRng>) -> Vec<u8> {
     let mut tls = if jarm_details.tls_version_support == TlsVersionSupport::TLS1_2 {
         vec![b"\x03\x01".to_vec(), b"\x03\x02".to_vec(), b"\x03\x03".to_vec()]
     } else {  // TLS 1.3 is supported
@@ -570,7 +533,7 @@ pub fn supported_versions(jarm_details: &PacketSpecification) -> Vec<u8> {
     // Assemble the extension
     let mut ext = b"\x00\x2b".to_vec();
     let mut versions = if jarm_details.use_grease {
-        random_grease()
+        rng.random_grease()
     } else {
         Vec::new()
     };
@@ -730,4 +693,54 @@ pub fn version_byte(version: &str) -> char {
         Some(str_count) => { usize::from_str(str_count).unwrap() }
     };
     option.chars().nth(count).unwrap()
+}
+
+
+pub trait JarmRng {
+    fn random_bytes(&self) -> Vec<u8>;
+
+    fn random_grease(&self) -> Vec<u8>;
+}
+
+pub struct PseudoRng {}
+
+pub struct TestRng {}
+
+impl JarmRng for TestRng {  // Mocked Rng used in tests
+    fn random_bytes(&self) -> Vec<u8> {
+        vec![42; 32]
+    }
+
+    fn random_grease(&self) -> Vec<u8> {
+        b"\x0a\x0a".to_vec()
+    }
+}
+
+impl JarmRng for PseudoRng {  // Real Rng used outside of tests
+    fn random_bytes(&self) -> Vec<u8> {
+        let mut rng = thread_rng();
+        rng.gen::<[u8; 32]>().to_vec()
+    }
+
+    fn random_grease(&self) -> Vec<u8> {
+        let grease_list = vec![
+            b"\x0a\x0a".to_vec(),
+            b"\x1a\x1a".to_vec(),
+            b"\x2a\x2a".to_vec(),
+            b"\x3a\x3a".to_vec(),
+            b"\x4a\x4a".to_vec(),
+            b"\x5a\x5a".to_vec(),
+            b"\x6a\x6a".to_vec(),
+            b"\x7a\x7a".to_vec(),
+            b"\x8a\x8a".to_vec(),
+            b"\x9a\x9a".to_vec(),
+            b"\xaa\xaa".to_vec(),
+            b"\xba\xba".to_vec(),
+            b"\xca\xca".to_vec(),
+            b"\xda\xda".to_vec(),
+            b"\xea\xea".to_vec(),
+            b"\xfa\xfa".to_vec(),
+        ];
+        grease_list.choose(&mut rand::thread_rng()).unwrap().clone()
+    }
 }
