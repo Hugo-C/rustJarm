@@ -1,10 +1,13 @@
 # rust_jarm
 
-rust_jarm is a library to compute JARM fingerprint. It is a more or less a direct translation of [the original jarm implementation](https://github.com/salesforce/jarm) from Python to Rust.
+rust_jarm is a library to compute JARM fingerprint. It is more or less a direct translation of [the original jarm implementation](https://github.com/salesforce/jarm) from Python to Rust.
 
 ## Installation
-
-*cargo crate to be created*
+put in Cargo.toml:
+```
+[dependencies]
+rust_jarm = "0.1.0"
+```
 
 ## Usage
 
