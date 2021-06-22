@@ -1,8 +1,12 @@
 [package]
-name = "jarm"
+name = "rustJarm"
 version = "0.1.0"
 authors = ["Hugo-C"]
 edition = "2018"
+license = "MIT"
+description = "JARM fingerprinting in native Rust"
+repository = "https://github.com/Hugo-C/rustJarm"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
