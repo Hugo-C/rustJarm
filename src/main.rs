@@ -1,4 +1,4 @@
-use jarm::Jarm;
+use rust_jarm::Jarm;
 
 fn main() {
     let host = "jsonplaceholder.typicode.com".to_string();

@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use jarm::{PacketSpecification, TlsVersion, CipherList, CipherOrder, TlsVersionSupport, Jarm, JarmPart, cipher_bytes, version_byte, TestRng, JarmRng, PseudoRng};
+    use rust_jarm::{PacketSpecification, TlsVersion, CipherList, CipherOrder, TlsVersionSupport, Jarm, JarmPart, cipher_bytes, version_byte, TestRng, JarmRng, PseudoRng};
 
 
     #[test]
@@ -82,7 +82,7 @@ mod tests {
         };
         let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_2_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_2_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -103,7 +103,7 @@ mod tests {
         };
         let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_2_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_2_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -125,7 +125,7 @@ mod tests {
         let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
 
-        let packet = jarm::build_packet(&tls_1_2_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_2_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -146,7 +146,7 @@ mod tests {
         };
         let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_2_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_2_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -168,7 +168,7 @@ mod tests {
         let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
 
-        let packet = jarm::build_packet(&tls_1_2_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_2_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -189,7 +189,7 @@ mod tests {
         };
         let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_1_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_1_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -210,7 +210,7 @@ mod tests {
         };
         let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_3_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_3_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -231,7 +231,7 @@ mod tests {
         };
         let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_3_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_3_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -252,7 +252,7 @@ mod tests {
         };
         let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_3_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_3_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -273,7 +273,7 @@ mod tests {
         };
         let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::build_packet(&tls_1_3_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_3_spec, &rng);
         assert_eq!(packet, expected_packet);
     }
 
@@ -294,7 +294,7 @@ mod tests {
         };
         let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::get_ciphers(&tls_1_2_spec, &rng);
+        let packet = rust_jarm::get_ciphers(&tls_1_2_spec, &rng);
         assert_eq!(packet, expected_ciphers);
     }
 
@@ -315,7 +315,7 @@ mod tests {
         };
         let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::get_ciphers(&tls_1_2_spec, &rng);
+        let packet = rust_jarm::get_ciphers(&tls_1_2_spec, &rng);
         assert_eq!(packet, expected_ciphers);
     }
 
@@ -336,7 +336,7 @@ mod tests {
         };
         let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = jarm::get_extensions(&tls_1_2_spec, &rng);
+        let packet = rust_jarm::get_extensions(&tls_1_2_spec, &rng);
         assert_eq!(packet, expected_extensions);
     }
 
@@ -356,7 +356,7 @@ mod tests {
             extension_order: CipherOrder::REVERSE,
         };
 
-        let packet = jarm::extension_server_name(&tls_1_2_spec);
+        let packet = rust_jarm::extension_server_name(&tls_1_2_spec);
         assert_eq!(packet, expected_extension_server_name);
     }
 
@@ -376,7 +376,7 @@ mod tests {
             extension_order: CipherOrder::REVERSE,
         };
 
-        let packet = jarm::aplns(&tls_1_2_spec);
+        let packet = rust_jarm::aplns(&tls_1_2_spec);
         assert_eq!(packet, expected_alpns);
     }
 
@@ -403,7 +403,7 @@ mod tests {
             b"\x08http/0.9".to_vec(),
         ];
 
-        jarm::cipher_mung(&mut input_ciphers, &CipherOrder::REVERSE);
+        rust_jarm::cipher_mung(&mut input_ciphers, &CipherOrder::REVERSE);
         assert_eq!(input_ciphers, expected_ciphers_output);
     }
 
@@ -427,7 +427,7 @@ mod tests {
             b"\x02hq".to_vec(),
         ];
 
-        jarm::cipher_mung(&mut input_ciphers, &CipherOrder::TOP_HALF);
+        rust_jarm::cipher_mung(&mut input_ciphers, &CipherOrder::TOP_HALF);
         assert_eq!(input_ciphers, expected_ciphers_output);
     }
 
@@ -450,7 +450,7 @@ mod tests {
             b"\x02hq".to_vec(),
         ];
 
-        jarm::cipher_mung(&mut input_ciphers, &CipherOrder::TOP_HALF);
+        rust_jarm::cipher_mung(&mut input_ciphers, &CipherOrder::TOP_HALF);
         assert_eq!(input_ciphers, expected_ciphers_output);
     }
 
@@ -474,7 +474,7 @@ mod tests {
             b"\x08http/0.9".to_vec(),
         ];
 
-        jarm::cipher_mung(&mut input_ciphers, &CipherOrder::BOTTOM_HALF);
+        rust_jarm::cipher_mung(&mut input_ciphers, &CipherOrder::BOTTOM_HALF);
         assert_eq!(input_ciphers, expected_ciphers_output);
     }
 
@@ -496,7 +496,7 @@ mod tests {
             b"\x08http/1.0".to_vec(),
         ];
 
-        jarm::cipher_mung(&mut input_ciphers, &CipherOrder::BOTTOM_HALF);
+        rust_jarm::cipher_mung(&mut input_ciphers, &CipherOrder::BOTTOM_HALF);
         assert_eq!(input_ciphers, expected_ciphers_output);
     }
 
@@ -524,7 +524,7 @@ mod tests {
             b"\x02hq".to_vec(),
         ];
 
-        jarm::cipher_mung(&mut input_ciphers, &CipherOrder::MIDDLE_OUT);
+        rust_jarm::cipher_mung(&mut input_ciphers, &CipherOrder::MIDDLE_OUT);
         assert_eq!(input_ciphers, expected_ciphers_output);
     }
 
@@ -550,7 +550,7 @@ mod tests {
             b"\x02hq".to_vec(),
         ];
 
-        jarm::cipher_mung(&mut input_ciphers, &CipherOrder::MIDDLE_OUT);
+        rust_jarm::cipher_mung(&mut input_ciphers, &CipherOrder::MIDDLE_OUT);
         assert_eq!(input_ciphers, expected_ciphers_output);
     }
 
@@ -559,7 +559,7 @@ mod tests {
         let expected_key_share = b"\x003\x00&\x00$\x00\x1d\x00 ********************************".to_vec();
         let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        assert_eq!(jarm::key_share(false, &rng), expected_key_share);
+        assert_eq!(rust_jarm::key_share(false, &rng), expected_key_share);
     }
 
     #[test]
@@ -579,7 +579,7 @@ mod tests {
         };
         let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        assert_eq!(jarm::supported_versions(&tls_1_2_spec, &rng), expected_supported_versions);
+        assert_eq!(rust_jarm::supported_versions(&tls_1_2_spec, &rng), expected_supported_versions);
     }
 
     #[test]
@@ -588,35 +588,35 @@ mod tests {
         let input_packet = hex::decode(input_hex).unwrap();
         let expected_result = "c02b|0303|h2|0000-0017-ff01-000b-0023-0010";
 
-        let jarm = jarm::read_packet(Vec::from(input_packet));
+        let jarm = rust_jarm::read_packet(Vec::from(input_packet));
 
         assert_eq!(jarm.raw, expected_result);
     }
 
     #[test]
     fn test_pack_as_unsigned_char() {
-        assert_eq!(jarm::pack_as_unsigned_char(1), b'\x01');
-        assert_eq!(jarm::pack_as_unsigned_char(32), b' ');
-        assert_eq!(jarm::pack_as_unsigned_char(45), b'-');
-        assert_eq!(jarm::pack_as_unsigned_char(102), b'f');
+        assert_eq!(rust_jarm::pack_as_unsigned_char(1), b'\x01');
+        assert_eq!(rust_jarm::pack_as_unsigned_char(32), b' ');
+        assert_eq!(rust_jarm::pack_as_unsigned_char(45), b'-');
+        assert_eq!(rust_jarm::pack_as_unsigned_char(102), b'f');
     }
 
     #[test]
     fn test_pack_as_unsigned_short() {
         eprintln!("\x00\x01 = {:?}", b"\x00\x01".to_vec());
         eprintln!("\x00 = {:?}", b"\x00");
-        assert_eq!(jarm::pack_as_unsigned_short(1), b"\x00\x01".to_vec());
-        assert_eq!(jarm::pack_as_unsigned_short(32), b"\x00 ".to_vec());
-        assert_eq!(jarm::pack_as_unsigned_short(45), b"\x00-".to_vec());
-        assert_eq!(jarm::pack_as_unsigned_short(102), b"\x00f".to_vec());
-        assert_eq!(jarm::pack_as_unsigned_short(1020), b"\x03\xfc".to_vec());
+        assert_eq!(rust_jarm::pack_as_unsigned_short(1), b"\x00\x01".to_vec());
+        assert_eq!(rust_jarm::pack_as_unsigned_short(32), b"\x00 ".to_vec());
+        assert_eq!(rust_jarm::pack_as_unsigned_short(45), b"\x00-".to_vec());
+        assert_eq!(rust_jarm::pack_as_unsigned_short(102), b"\x00f".to_vec());
+        assert_eq!(rust_jarm::pack_as_unsigned_short(1020), b"\x03\xfc".to_vec());
     }
 
     #[test]
     fn test_as_u32_be() {
-        assert_eq!(jarm::as_u32_be(&[0, 1]), 1);
-        assert_eq!(jarm::as_u32_be(&[1, 0]), 256);
-        assert_eq!(jarm::as_u32_be(&[4, 7]), 1031);
+        assert_eq!(rust_jarm::as_u32_be(&[0, 1]), 1);
+        assert_eq!(rust_jarm::as_u32_be(&[1, 0]), 256);
+        assert_eq!(rust_jarm::as_u32_be(&[4, 7]), 1031);
     }
 
     #[test]
@@ -655,7 +655,7 @@ mod tests {
         let values: Vec<Option<&[u8]>> = vec![None, None, Some(b"\x00"), Some(b"\x01\x00"), None, Some(b"\x00\x03\x02h2")];
         let expected_result = "h2".to_string();
 
-        let result = jarm::find_extension(&types, values);
+        let result = rust_jarm::find_extension(&types, values);
 
         assert_eq!(result, expected_result);
     }
@@ -665,7 +665,7 @@ mod tests {
         let types: Vec<&[u8]> = vec![b"\x00\x00", b"\x00\x17", b"\xff\x01", b"\x00\x0b", b"\x00#", b"\x00\x10"];
         let expected_result = "0000-0017-ff01-000b-0023-0010".to_string();
 
-        let result = jarm::add_formatting_hyphen(&types);
+        let result = rust_jarm::add_formatting_hyphen(&types);
 
         assert_eq!(result, expected_result);
     }
@@ -677,7 +677,7 @@ mod tests {
         let input_counter: u8 = 0;
         let expected_result = "h2|0000-0017-ff01-000b-0023-0010";
 
-        let extension = jarm::extract_extension_info(Vec::from(input_packet), input_counter);
+        let extension = rust_jarm::extract_extension_info(Vec::from(input_packet), input_counter);
 
         assert_eq!(extension, expected_result);
     }
@@ -689,7 +689,7 @@ mod tests {
         let input_counter: u8 = 32;
         let expected_result = "|0033-002b";
 
-        let extension = jarm::extract_extension_info(Vec::from(input_packet), input_counter);
+        let extension = rust_jarm::extract_extension_info(Vec::from(input_packet), input_counter);
 
         assert_eq!(extension, expected_result);
     }
