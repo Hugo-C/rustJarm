@@ -22,7 +22,7 @@ mod tests {
         ];
         jarm.rng = Box::new(TestRng {});  // use the mock rng
 
-        assert_eq!(jarm.hash(), expected_hash);
+        assert_eq!(jarm.hash().unwrap(), expected_hash);
     }
 
     #[test]
@@ -61,7 +61,7 @@ mod tests {
             JarmPart::new("|||"),
         ];
 
-        assert_eq!(jarm.hash(), expected_hash);
+        assert_eq!(jarm.hash().unwrap(), expected_hash);
     }
 
     #[test]

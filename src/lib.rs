@@ -4,6 +4,7 @@ use std::str::FromStr;
 use sha2::{Sha256, Digest};
 use std::net::TcpStream;
 use std::io::{Write, Read};
+use std::error::Error;
 
 const ALPN_EXTENSION: &[u8; 2] = b"\x00\x10";
 const SOCKET_BUFFER: u64 = 1484;
@@ -155,7 +156,8 @@ impl Jarm {
         }
     }
 
-    pub fn retrieve_parts(&mut self) {
+    pub fn retrieve_parts(&mut self) -> Result<Vec<JarmPart>, Box<dyn Error>> {
+        let mut parts = Vec::new();
         for spec in &self.queue {
             let payload = build_packet(&spec, &self.rng);
 
@@ -166,26 +168,22 @@ impl Jarm {
                 Ok(mut stream) => {
                     stream.write_all(&payload).unwrap();
                     let mut handle = stream.take(SOCKET_BUFFER);
-                    let read_result = handle.read(&mut data);
-                    if read_result.is_err() {
-                        panic!("Couldn't read server response");
-                    }
+                    let _read_result = handle.read(&mut data)?;
                 },
-                Err(e) => {
-                    panic!("Failed to connect: {}", e);
-                }
+                Err(e) => return Err(Box::from(e))
             }
             let jarm_part = read_packet(Vec::from(data));
-            self.parts.push(jarm_part);
+            parts.push(jarm_part);
         }
+        Ok(parts)
     }
 
-    pub fn hash(&mut self) -> String {
+    pub fn hash(&mut self) -> Result<String, Box<dyn Error>> {
         if self.parts.is_empty(){
-            self.retrieve_parts()
+            self.parts = self.retrieve_parts()?
         }
         if self.parts.iter().all(|p| p.raw == "|||") {
-            return "0".repeat(62);
+            return Ok("0".repeat(62));
         }
 
         let mut fuzzy_hash = String::new();
@@ -205,7 +203,7 @@ impl Jarm {
         hasher.update(alpns_and_ext.into_bytes());
         let sha256 = hex::encode(hasher.finalize());
         fuzzy_hash.push_str(sha256.get(0..32).unwrap());
-        fuzzy_hash
+        Ok(fuzzy_hash)
     }
 }
 

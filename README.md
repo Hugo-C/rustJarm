@@ -14,8 +14,8 @@ rust_jarm = "0.1.0"
 ````rust
     let host = "some.website.com".to_string();
     let port = "443".to_string();
-    let jarm_hash = Jarm::new(host, port).hash();
-    println!("JARM hash: {:?}", jarm_hash);
+    let jarm_hash = Jarm::new(host, port).hash().expect("failed to connect");
+    println!("JARM hash: {}", jarm_hash);
 ````
 
 check [main.rs](src/main.rs) for the full example
