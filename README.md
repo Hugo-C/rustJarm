@@ -1,12 +1,12 @@
 # rust_jarm
-
+[![Rust](https://github.com/Hugo-C/rustJarm/actions/workflows/rust.yml/badge.svg)](https://github.com/Hugo-C/rustJarm/actions/workflows/rust.yml) ![Crates.io](https://img.shields.io/crates/v/rust_jarm) ![Crates.io](https://img.shields.io/crates/d/rust_jarm)  
 rust_jarm is a library to compute JARM fingerprint. It is more or less a direct translation of [the original jarm implementation](https://github.com/salesforce/jarm) from Python to Rust.
 
 ## Installation
 put in Cargo.toml:
 ```
 [dependencies]
-rust_jarm = "0.1.0"
+rust_jarm = "0.2.0"
 ```
 
 ## Usage
