@@ -159,7 +159,7 @@ impl Jarm {
     pub fn retrieve_parts(&mut self) -> Result<Vec<JarmPart>, Box<dyn Error>> {
         let mut parts = Vec::new();
         for spec in &self.queue {
-            let payload = build_packet(&spec, &self.rng);
+            let payload = build_packet(spec, &self.rng);
 
             // Send packet
             let url = format!("{}:{}", spec.host, spec.port);
@@ -207,20 +207,21 @@ impl Jarm {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub enum TlsVersion {
     TLS1_1,
     TLS1_2,
     TLS1_3,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 pub enum CipherList {
     ALL,
     NO1_3,
 }
 
-#[derive(PartialEq)]
+#[allow(non_camel_case_types)]
+#[derive(PartialEq, Eq)]
 pub enum CipherOrder {
     FORWARD,
     REVERSE,
@@ -229,7 +230,8 @@ pub enum CipherOrder {
     MIDDLE_OUT,
 }
 
-#[derive(PartialEq)]
+#[allow(non_camel_case_types)]
+#[derive(PartialEq, Eq)]
 pub enum TlsVersionSupport {
     TLS1_2,
     TLS1_3,
@@ -617,7 +619,7 @@ pub fn extract_extension_info(data: Vec<u8>, counter: u8) -> String {
             count += 4;
         } else {
             let value = &data[slice_start + 4..slice_start + 4 + ext_length as usize];
-            values.push(Some(&value));
+            values.push(Some(value));
             count += ext_length + 4
         }
     }
