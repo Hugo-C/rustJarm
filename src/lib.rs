@@ -159,7 +159,7 @@ impl Jarm {
     pub fn retrieve_parts(&mut self) -> Result<Vec<JarmPart>, Box<dyn Error>> {
         let mut parts = Vec::new();
         for spec in &self.queue {
-            let payload = build_packet(spec, &self.rng);
+            let payload = build_packet(spec, self.rng.as_ref());
 
             // Send packet
             let url = format!("{}:{}", spec.host, spec.port);
@@ -251,7 +251,7 @@ pub struct PacketSpecification {
 }
 
 
-pub fn build_packet(jarm_details: &PacketSpecification, rng: &Box<dyn JarmRng>) -> Vec<u8> {
+pub fn build_packet(jarm_details: &PacketSpecification, rng: &dyn JarmRng) -> Vec<u8> {
     let mut client_hello = Vec::new();
     let mut payload= b"\x16".to_vec();
 
@@ -307,7 +307,7 @@ pub fn pack_as_unsigned_short(n: usize) -> Vec<u8> {
     vec![(n >> 8) as u8, n as u8]
 }
 
-pub fn get_ciphers(jarm_details: &PacketSpecification, rng: &Box<dyn JarmRng>) -> Vec<u8> {
+pub fn get_ciphers(jarm_details: &PacketSpecification, rng: &dyn JarmRng) -> Vec<u8> {
     // TODO implement all
     let mut selected_ciphers = Vec::new();
 
@@ -348,7 +348,7 @@ pub fn get_ciphers(jarm_details: &PacketSpecification, rng: &Box<dyn JarmRng>) -
     selected_ciphers
 }
 
-pub fn get_extensions(jarm_details: &PacketSpecification, rng: &Box<dyn JarmRng>) -> Vec<u8> {
+pub fn get_extensions(jarm_details: &PacketSpecification, rng: &dyn JarmRng) -> Vec<u8> {
     let mut extension_bytes = Vec::new();
     let mut all_extensions = Vec::new();
 
@@ -500,7 +500,7 @@ pub fn cipher_mung(ciphers: &mut Vec<Vec<u8>>, cipher_order: &CipherOrder) {
     }
 }
 
-pub fn key_share(grease: bool, rng: &Box<dyn JarmRng>) -> Vec<u8> {
+pub fn key_share(grease: bool, rng: &dyn JarmRng) -> Vec<u8> {
     let mut ext = b"\x00\x33".to_vec();
 
     let mut share_ext = if grease {
@@ -522,7 +522,7 @@ pub fn key_share(grease: bool, rng: &Box<dyn JarmRng>) -> Vec<u8> {
     ext
 }
 
-pub fn supported_versions(jarm_details: &PacketSpecification, rng: &Box<dyn JarmRng>) -> Vec<u8> {
+pub fn supported_versions(jarm_details: &PacketSpecification, rng: &dyn JarmRng) -> Vec<u8> {
     let mut tls = if jarm_details.tls_version_support == TlsVersionSupport::TLS1_2 {
         vec![b"\x03\x01".to_vec(), b"\x03\x02".to_vec(), b"\x03\x03".to_vec()]
     } else {  // TLS 1.3 is supported
