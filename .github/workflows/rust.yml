@@ -20,8 +20,10 @@ jobs:
       uses: Swatinem/rust-cache@v2
     - name: Check
       run: cargo check --verbose
-    - name: Run Tests
-      run: cargo test --verbose
+    - name: Run Tests with coverage
+      uses: actions-rs/tarpaulin@v0.1
+    - name: Upload coverage report to codecov.io
+      uses: codecov/codecov-action@v3
     - name: Run Clippy
       uses: actions-rs/clippy-check@v1
       with:
