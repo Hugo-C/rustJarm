@@ -18,7 +18,7 @@ rust_jarm = "0.2.0"
     println!("JARM hash: {}", jarm_hash);
 ````
 
-check [main.rs](src/main.rs) for the full example
+check [jarm.rs](examples/jarm.rs) for the full example, run it with `cargo run --example jarm`
 
 ## Contribute
 
