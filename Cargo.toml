@@ -2,7 +2,7 @@
 name = "rust_jarm"
 version = "0.2.0"
 authors = ["Hugo-C"]
-edition = "2018"
+edition = "2021"
 license = "MIT"
 description = "JARM fingerprinting in native Rust"
 repository = "https://github.com/Hugo-C/rustJarm"
