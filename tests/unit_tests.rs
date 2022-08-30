@@ -2,6 +2,9 @@
 mod tests {
     use rust_jarm::{PacketSpecification, TlsVersion, CipherList, CipherOrder, TlsVersionSupport, Jarm, JarmPart, cipher_bytes, version_byte, TestRng, JarmRng, PseudoRng};
 
+    fn test_rng() -> TestRng {
+        TestRng {}
+    }
 
     #[test]
     fn test_jarm_hash() {
@@ -80,9 +83,8 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_2,
             extension_order: CipherOrder::REVERSE,
         };
-        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = rust_jarm::build_packet(&tls_1_2_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_2_spec, &test_rng());
         assert_eq!(packet, expected_packet);
     }
 
@@ -101,9 +103,8 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_2,
             extension_order: CipherOrder::FORWARD,
         };
-        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = rust_jarm::build_packet(&tls_1_2_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_2_spec, &test_rng());
         assert_eq!(packet, expected_packet);
     }
 
@@ -122,10 +123,8 @@ mod tests {
             tls_version_support: TlsVersionSupport::NO_SUPPORT,
             extension_order: CipherOrder::FORWARD,
         };
-        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-
-        let packet = rust_jarm::build_packet(&tls_1_2_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_2_spec, &test_rng());
         assert_eq!(packet, expected_packet);
     }
 
@@ -144,9 +143,8 @@ mod tests {
             tls_version_support: TlsVersionSupport::NO_SUPPORT,
             extension_order: CipherOrder::FORWARD,
         };
-        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = rust_jarm::build_packet(&tls_1_2_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_2_spec, &test_rng());
         assert_eq!(packet, expected_packet);
     }
 
@@ -165,10 +163,8 @@ mod tests {
             tls_version_support: TlsVersionSupport::NO_SUPPORT,
             extension_order: CipherOrder::REVERSE,
         };
-        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-
-        let packet = rust_jarm::build_packet(&tls_1_2_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_2_spec, &test_rng());
         assert_eq!(packet, expected_packet);
     }
 
@@ -187,9 +183,8 @@ mod tests {
             tls_version_support: TlsVersionSupport::NO_SUPPORT,
             extension_order: CipherOrder::FORWARD,
         };
-        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = rust_jarm::build_packet(&tls_1_1_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_1_spec, &test_rng());
         assert_eq!(packet, expected_packet);
     }
 
@@ -208,9 +203,8 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_3,
             extension_order: CipherOrder::REVERSE,
         };
-        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = rust_jarm::build_packet(&tls_1_3_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_3_spec, &test_rng());
         assert_eq!(packet, expected_packet);
     }
 
@@ -229,9 +223,8 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_3,
             extension_order: CipherOrder::FORWARD,
         };
-        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = rust_jarm::build_packet(&tls_1_3_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_3_spec, &test_rng());
         assert_eq!(packet, expected_packet);
     }
 
@@ -250,9 +243,8 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_3,
             extension_order: CipherOrder::FORWARD,
         };
-        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = rust_jarm::build_packet(&tls_1_3_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_3_spec, &test_rng());
         assert_eq!(packet, expected_packet);
     }
 
@@ -271,9 +263,8 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_3,
             extension_order: CipherOrder::REVERSE,
         };
-        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = rust_jarm::build_packet(&tls_1_3_spec, &rng);
+        let packet = rust_jarm::build_packet(&tls_1_3_spec, &test_rng());
         assert_eq!(packet, expected_packet);
     }
 
@@ -292,9 +283,8 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_2,
             extension_order: CipherOrder::REVERSE,
         };
-        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = rust_jarm::get_ciphers(&tls_1_2_spec, &rng);
+        let packet = rust_jarm::get_ciphers(&tls_1_2_spec, &test_rng());
         assert_eq!(packet, expected_ciphers);
     }
 
@@ -313,9 +303,8 @@ mod tests {
             tls_version_support: TlsVersionSupport::NO_SUPPORT,
             extension_order: CipherOrder::REVERSE,
         };
-        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = rust_jarm::get_ciphers(&tls_1_2_spec, &rng);
+        let packet = rust_jarm::get_ciphers(&tls_1_2_spec, &test_rng());
         assert_eq!(packet, expected_ciphers);
     }
 
@@ -334,9 +323,8 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_2,
             extension_order: CipherOrder::REVERSE,
         };
-        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        let packet = rust_jarm::get_extensions(&tls_1_2_spec, &rng);
+        let packet = rust_jarm::get_extensions(&tls_1_2_spec, &test_rng());
         assert_eq!(packet, expected_extensions);
     }
 
@@ -557,9 +545,7 @@ mod tests {
     #[test]
     fn test_key_share() {
         let expected_key_share = b"\x003\x00&\x00$\x00\x1d\x00 ********************************".to_vec();
-        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
-
-        assert_eq!(rust_jarm::key_share(false, &rng), expected_key_share);
+        assert_eq!(rust_jarm::key_share(false, &test_rng()), expected_key_share);
     }
 
     #[test]
@@ -577,9 +563,8 @@ mod tests {
             tls_version_support: TlsVersionSupport::TLS1_2,
             extension_order: CipherOrder::REVERSE,
         };
-        let rng: Box<dyn JarmRng> = Box::new(TestRng {});
 
-        assert_eq!(rust_jarm::supported_versions(&tls_1_2_spec, &rng), expected_supported_versions);
+        assert_eq!(rust_jarm::supported_versions(&tls_1_2_spec, &test_rng()), expected_supported_versions);
     }
 
     #[test]
