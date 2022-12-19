@@ -1,13 +1,17 @@
+mod error;
+
 use rand::{thread_rng, Rng};
 use rand::seq::SliceRandom;
 use std::str::FromStr;
 use sha2::{Sha256, Digest};
-use std::net::TcpStream;
+use std::net::{SocketAddr, TcpStream, ToSocketAddrs};
 use std::io::{Write, Read};
-use std::error::Error;
+use std::time::Duration;
+use crate::error::{DetailedError, JarmError};
 
 const ALPN_EXTENSION: &[u8; 2] = b"\x00\x10";
 const SOCKET_BUFFER: u64 = 1484;
+const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
 
 
 pub struct JarmPart {
@@ -26,6 +30,7 @@ pub struct Jarm {
     pub parts: Vec<JarmPart>,
     pub queue: Vec<PacketSpecification>,
     pub rng: Box<dyn JarmRng + 'static>,
+    pub timeout: Duration,
 }
 
 impl Default for Jarm {
@@ -152,25 +157,27 @@ impl Jarm {
                 },
                 //</editor-fold>
             ],
-            rng: Box::new(PseudoRng {})
+            rng: Box::new(PseudoRng {}),
+            timeout: DEFAULT_TIMEOUT
         }
     }
 
-    pub fn retrieve_parts(&mut self) -> Result<Vec<JarmPart>, Box<dyn Error>> {
+    pub fn retrieve_parts(&mut self) -> Result<Vec<JarmPart>, JarmError> {
         let mut parts = Vec::new();
         for spec in &self.queue {
             let payload = build_packet(spec, self.rng.as_ref());
 
             // Send packet
             let url = format!("{}:{}", spec.host, spec.port);
+            let address = resolve(url)?;  // Resolve the ip if needed
             let mut data = [0_u8; SOCKET_BUFFER as usize];
-            match TcpStream::connect(url) {
+            match TcpStream::connect_timeout(&address, self.timeout) {
                 Ok(mut stream) => {
                     stream.write_all(&payload).unwrap();
                     let mut handle = stream.take(SOCKET_BUFFER);
                     let _read_result = handle.read(&mut data)?;
                 },
-                Err(e) => return Err(Box::from(e))
+                Err(e) => return Err(JarmError::Connection(DetailedError::from(Box::from(e))))
             }
             let jarm_part = read_packet(Vec::from(data));
             parts.push(jarm_part);
@@ -178,7 +185,7 @@ impl Jarm {
         Ok(parts)
     }
 
-    pub fn hash(&mut self) -> Result<String, Box<dyn Error>> {
+    pub fn hash(&mut self) -> Result<String, JarmError> {
         if self.parts.is_empty(){
             self.parts = self.retrieve_parts()?
         }
@@ -192,7 +199,7 @@ impl Jarm {
         for part in &self.parts {
             let components: Vec<&str> = part.raw.split('|').collect();
             // Custom jarm hash includes a fuzzy hash of the ciphers and versions
-            fuzzy_hash.push_str(&*cipher_bytes(components[0]));
+            fuzzy_hash.push_str(&cipher_bytes(components[0]));
             fuzzy_hash.push(version_byte(components[1]));
             alpns_and_ext.push_str(components[2]);
             alpns_and_ext.push_str(components[3]);
@@ -693,6 +700,24 @@ pub fn version_byte(version: &str) -> char {
         Some(str_count) => { usize::from_str(str_count).unwrap() }
     };
     option.chars().nth(count).unwrap()
+}
+
+
+/// Resolve the given url to an ip
+/// the first ip found is returned, else an error is raised.
+fn resolve(url: String) -> Result<SocketAddr, JarmError> {
+    let mut ips = match url.to_socket_addrs() {
+        Ok(address) => address,
+        Err(e) => {
+            let error = DetailedError::from(Box::from(e));
+            return Err(JarmError::DnsResolve(error))
+        },
+    };
+    if let Some(address) = ips.next() {
+        Ok(address)
+    } else {
+        Err(JarmError::DnsResolve(DetailedError::default()))
+    }
 }
 
 
