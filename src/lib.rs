@@ -26,6 +26,7 @@ impl JarmPart {
     }
 }
 
+#[non_exhaustive]
 pub struct Jarm {
     pub parts: Vec<JarmPart>,
     pub queue: Vec<PacketSpecification>,
