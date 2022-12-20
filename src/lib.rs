@@ -1,4 +1,4 @@
-mod error;
+pub mod error;
 
 use rand::{thread_rng, Rng};
 use rand::seq::SliceRandom;
@@ -767,5 +767,24 @@ impl JarmRng for PseudoRng {  // Real Rng used outside of tests
             b"\xfa\xfa".to_vec(),
         ];
         grease_list.choose(&mut rand::thread_rng()).unwrap().clone()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use rstest::*;
+    use crate::resolve;
+    use crate::error::JarmError;
+
+    #[rstest]
+    #[case("invalid_url")]
+    #[case("google.com")]  // missing port
+    fn test_dns_resolve_error(#[case] invalid_url: String) {
+        let expected_error = "invalid socket address";
+        let error = resolve(invalid_url).err().unwrap();
+        if let JarmError::DnsResolve(err) = error {
+            let underlying_error = err.underlying_error.unwrap();
+            assert_eq!(underlying_error.to_string(), expected_error);
+        } else { panic!("unexpected type") }
     }
 }
