@@ -6,7 +6,7 @@ rust_jarm is a library to compute JARM fingerprint. It is more or less a direct 
 put in Cargo.toml:
 ```
 [dependencies]
-rust_jarm = "0.3.0"
+rust_jarm = "0.3.1"
 ```
 
 ## Usage
