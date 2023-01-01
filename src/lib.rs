@@ -599,12 +599,32 @@ pub fn as_u32_be(array: &[u8]) -> u32 {
 
 pub fn extract_extension_info(data: Vec<u8>, counter: u8) -> String {
     // Error handling
-    //TODO
+    let value_on_error = "|".to_string();
+    let length_start = (counter + 47) as usize;
+    if data[length_start] == 11 {
+        return value_on_error;
+    }
+    let incoming_error_1_start = (counter+50) as usize;
+    let incoming_error_1_end = (counter+53) as usize;
+    let test1 = hex::encode(&data[incoming_error_1_start..incoming_error_1_end]);
+    if test1 == "0eac0b" {
+        return value_on_error;
+    }
+    let incoming_error_2_start = (counter+82) as usize;
+    let incoming_error_2_end = (counter+85) as usize;
+    let test2 = hex::encode(&data[incoming_error_2_start..incoming_error_2_end]);
+    if test2 == "0ff00b" {
+        return value_on_error;
+    }
+    let server_hello_length_slice: &[u8] = &data[3..5];
+    let server_hello_length = as_u32_be(server_hello_length_slice);
+    if u32::from(counter+42) >= server_hello_length {
+        return value_on_error;
+    }
 
     // Collect types and value
     let mut count = 49 + counter as u32;
-    let length_start: usize = (counter + 47) as usize;
-    let length_end: usize = (counter + 48) as usize;
+    let length_end = (counter + 48) as usize;
 
     let length_slice: &[u8] = &data[length_start..=length_end];
     let length = as_u32_be(length_slice);
