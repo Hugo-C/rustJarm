@@ -564,17 +564,15 @@ pub fn read_packet(data: Vec<u8>) -> JarmPart {
     }
 
     let mut jarm = String::new();
-    let counter = data[43];
+    let counter = data[43] as usize;
 
     // Find server's selected cipher
-    let start: usize = (counter + 44) as usize;
-    let end: usize = (counter + 45) as usize;
+    let start = counter + 44;
+    let end = counter + 45;
     let selected_cipher = &data[start..=end];
 
     // Find server's selected version
-    let version_start: usize = 9;
-    let version_end: usize = 10;
-    let version = &data[version_start..=version_end];
+    let version = &data[9..=10];
 
     // Format
     jarm += &*hex::encode(selected_cipher);
@@ -597,34 +595,16 @@ pub fn as_u32_be(array: &[u8]) -> u32 {
     ((array[0] as u32) << 8) + (array[1] as u32)
 }
 
-pub fn extract_extension_info(data: Vec<u8>, counter: u8) -> String {
+pub fn extract_extension_info(data: Vec<u8>, counter: usize) -> String {
     // Error handling
-    let value_on_error = "|".to_string();
-    let length_start = (counter + 47) as usize;
-    if data[length_start] == 11 {
-        return value_on_error;
-    }
-    let incoming_error_1_start = (counter+50) as usize;
-    let incoming_error_1_end = (counter+53) as usize;
-    let test1 = hex::encode(&data[incoming_error_1_start..incoming_error_1_end]);
-    if test1 == "0eac0b" {
-        return value_on_error;
-    }
-    let incoming_error_2_start = (counter+82) as usize;
-    let incoming_error_2_end = (counter+85) as usize;
-    let test2 = hex::encode(&data[incoming_error_2_start..incoming_error_2_end]);
-    if test2 == "0ff00b" {
-        return value_on_error;
-    }
-    let server_hello_length_slice: &[u8] = &data[3..5];
-    let server_hello_length = as_u32_be(server_hello_length_slice);
-    if u32::from(counter+42) >= server_hello_length {
-        return value_on_error;
+    if data_has_errors(&data, counter) {
+        return "|".to_string();
     }
 
     // Collect types and value
-    let mut count = 49 + counter as u32;
-    let length_end = (counter + 48) as usize;
+    let mut count = 49 + (counter as u32);
+    let length_start = counter + 47;
+    let length_end = counter + 48;
 
     let length_slice: &[u8] = &data[length_start..=length_end];
     let length = as_u32_be(length_slice);
@@ -657,6 +637,23 @@ pub fn extract_extension_info(data: Vec<u8>, counter: u8) -> String {
 
     let formatted_types = add_formatting_hyphen(&types);
     format!("{}|{}", alpn, formatted_types)
+}
+
+fn data_has_errors(data: &[u8], counter: usize) -> bool {
+    let length_start = counter + 47;
+    if data[length_start] == 11 {
+        return true;
+    }
+    if data[(counter + 50)..(counter + 53)] == b"\x0e\xac\x0b".to_vec() ||
+        data[(counter + 82)..(counter + 85)] == b"\x0f\xf0\x0b".to_vec() {
+        return true;
+    }
+    let server_hello_length_slice: &[u8] = &data[3..5];
+    let server_hello_length = as_u32_be(server_hello_length_slice);
+    if (counter as u32) + 42 >= server_hello_length {
+        return true;
+    }
+    false
 }
 
 pub fn add_formatting_hyphen(types: &[&[u8]]) -> String {
