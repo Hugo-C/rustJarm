@@ -22,6 +22,8 @@ jobs:
       run: cargo check --verbose
     - name: Run Tests with coverage
       uses: actions-rs/tarpaulin@v0.1
+      with:
+        version: 0.22.0
     - name: Upload coverage report to codecov.io
       uses: codecov/codecov-action@v3
     - name: Run Clippy
