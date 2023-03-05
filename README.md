@@ -1,6 +1,6 @@
 # rust_jarm
 [![Rust](https://github.com/Hugo-C/rustJarm/actions/workflows/rust.yml/badge.svg)](https://github.com/Hugo-C/rustJarm/actions/workflows/rust.yml)
-[![Dependency Status](https://deps.rs/repo/github/Hugo-C/rustJarm/status.svg)](https://deps.rs/repo/github/Hugo-C/rustJarm/)
+[![dependency status](https://deps.rs/crate/rust_jarm/latest/status.svg)](https://deps.rs/crate/rust_jarm/)
 [![Codecov](https://img.shields.io/codecov/c/github/Hugo-C/rustJarm)](https://app.codecov.io/gh/Hugo-C/rustJarm)
 [![Crates.io](https://img.shields.io/crates/v/rust_jarm)](https://crates.io/crates/rust_jarm)
 [![Crates.io](https://img.shields.io/crates/d/rust_jarm)](https://crates.io/crates/rust_jarm)  
