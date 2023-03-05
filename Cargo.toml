@@ -1,6 +1,6 @@
 [package]
 name = "rust_jarm"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Hugo-C"]
 edition = "2021"
 license = "MIT"
@@ -14,7 +14,7 @@ exclude = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-pnet = "^0.31"
+pnet = "^0.33"
 hex = "^0.4"
 rand = "^0.8"
 sha2 = "^0.10"
