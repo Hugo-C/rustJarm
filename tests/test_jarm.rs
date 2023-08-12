@@ -369,6 +369,24 @@ mod tests {
     }
 
     #[test]
+    fn test_cipher_mung_forward() {
+        let mut input_ciphers = vec![
+            b"\x08http/0.9".to_vec(),
+            b"\x08http/1.0".to_vec(),
+            b"\x08http/1.1".to_vec(),
+            b"\x06spdy/1".to_vec(),
+            b"\x06spdy/2".to_vec(),
+            b"\x06spdy/3\x02h2".to_vec(),
+            b"\x03h2c".to_vec(),
+            b"\x02hq".to_vec(),
+        ];
+        let original = input_ciphers.clone();
+
+        rust_jarm::cipher_mung(&mut input_ciphers, &CipherOrder::FORWARD);
+        assert_eq!(input_ciphers, original);  // Nothing changed for Forward order
+    }
+
+    #[test]
     fn test_cipher_mung_reverse() {
         let mut input_ciphers = vec![
             b"\x08http/0.9".to_vec(),

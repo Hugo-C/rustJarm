@@ -316,7 +316,6 @@ pub fn pack_as_unsigned_short(n: usize) -> Vec<u8> {
 }
 
 pub fn get_ciphers(jarm_details: &PacketSpecification, rng: &dyn JarmRng) -> Vec<u8> {
-    // TODO implement all
     let mut selected_ciphers = Vec::new();
 
     let mut list = match jarm_details.cipher_list {
