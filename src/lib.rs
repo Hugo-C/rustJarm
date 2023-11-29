@@ -174,7 +174,7 @@ impl Jarm {
             let mut data = [0_u8; SOCKET_BUFFER as usize];
             match TcpStream::connect_timeout(&address, self.timeout) {
                 Ok(mut stream) => {
-                    stream.write_all(&payload).unwrap();
+                    stream.write_all(&payload)?;
                     let mut handle = stream.take(SOCKET_BUFFER);
                     let _read_result = handle.read(&mut data)?;
                 },
@@ -698,7 +698,7 @@ pub fn cipher_bytes(cipher: &str) -> String {
         b"\x13\x01", b"\x13\x02", b"\x13\x03", b"\x13\x04", b"\x13\x05"
     ];
     let count = match list.iter().position(|&bytes| hex::encode(bytes) == cipher) {
-        None => { panic!("cipher not expected {:?}", cipher)}
+        None => { list.len() + 1 }
         Some(index) => { index + 1 }
     };
 

@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    use rstest::rstest;
     use rust_jarm::{PacketSpecification, TlsVersion, CipherList, CipherOrder, TlsVersionSupport, Jarm, JarmPart, cipher_bytes, version_byte, TestRng, JarmRng, PseudoRng};
 
     fn test_rng() -> TestRng {
@@ -28,14 +29,26 @@ mod tests {
         assert_eq!(jarm.hash().unwrap(), expected_hash);
     }
 
-    #[test]
-    fn test_cipher_bytes() {  // TODO more cases
-        assert_eq!(cipher_bytes("c02b"), "27");
+    #[rstest]
+    #[case("0004", "01")]
+    #[case("c027", "25")]
+    #[case("c02b", "27")]
+    #[case("1305", "45")]
+    fn test_cipher_bytes(#[case] input: &str, #[case] expected: &str) {
+        assert_eq!(cipher_bytes(input), expected);
     }
 
     #[test]
     fn test_cipher_bytes_empty_string() {
         assert_eq!(cipher_bytes(""), "00");
+    }
+
+    #[rstest]
+    #[case("0000")]
+    #[case("0034")]
+    fn test_cipher_bytes_is_unexpected(#[case] input: &str) {
+        let result = cipher_bytes(input);
+        assert_eq!(result, "46");
     }
 
     #[test]
