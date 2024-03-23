@@ -10,31 +10,37 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  coverage:
+    name: coverage
+    runs-on: ubuntu-latest
+    container:
+      image: xd009642/tarpaulin:develop-nightly
+      options: --security-opt seccomp=unconfined
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - name: Generate code coverage
+        run: cargo tarpaulin --verbose --all-features --workspace --timeout 120 --out xml
+      - name: Upload coverage report to codecov.io
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # required
+          fail_ci_if_error: true
 
-  build:
-    name: Build and test
+  clippy_check:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - id: rustcache
-      uses: Swatinem/rust-cache@v2
-    - name: Check
-      run: cargo check --verbose
-    - name: Run Tests with coverage
-      uses: actions-rs/tarpaulin@v0.1
-      with:
-        version: 0.22.0
-    - name: Upload coverage report to codecov.io
-      uses: codecov/codecov-action@v3
-    - name: Run Clippy
-      uses: actions-rs/clippy-check@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        args: --all-features
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+      - name: Run Clippy
+        run: cargo clippy --all-targets --all-features
+        env:
+          RUSTFLAGS: "-Dwarnings"
 
   semver:
     name: Check semantic version compatibility
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: obi1kenobi/cargo-semver-checks-action@v2
