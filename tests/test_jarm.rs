@@ -604,7 +604,7 @@ mod tests {
         let input_packet = hex::decode(input_hex).unwrap();
         let expected_result = "c02b|0303|h2|0000-0017-ff01-000b-0023-0010";
 
-        let jarm = rust_jarm::read_packet(Vec::from(input_packet));
+        let jarm = rust_jarm::read_packet(input_packet);
 
         assert_eq!(jarm.raw, expected_result);
     }
@@ -697,7 +697,7 @@ mod tests {
         let input_packet = hex::decode(input_hex).unwrap();
         let counter: usize = 0;
 
-        let extension = rust_jarm::extract_extension_info(Vec::from(input_packet), counter);
+        let extension = rust_jarm::extract_extension_info(input_packet, counter);
 
         assert_eq!(extension, expected_result);
     }
@@ -709,7 +709,7 @@ mod tests {
         let input_packet = hex::decode(input_hex).unwrap();
         let counter: usize = 32;
 
-        let extension = rust_jarm::extract_extension_info(Vec::from(input_packet), counter);
+        let extension = rust_jarm::extract_extension_info(input_packet, counter);
 
         assert_eq!(extension, expected_result);
     }
@@ -721,7 +721,7 @@ mod tests {
         let input_packet = hex::decode(input_hex).unwrap();
         let counter: usize = 32;
 
-        let extension = rust_jarm::extract_extension_info(Vec::from(input_packet), counter);
+        let extension = rust_jarm::extract_extension_info(input_packet, counter);
 
         assert_eq!(extension, expected_result);
     }
@@ -737,7 +737,7 @@ mod tests {
         let length_start_index = counter + 47;
         input_packet[length_start_index] = 11;  // Force the value to 11
 
-        let extension = rust_jarm::extract_extension_info(Vec::from(input_packet), counter);
+        let extension = rust_jarm::extract_extension_info(input_packet, counter);
 
         assert_eq!(extension, expected_result);
     }
@@ -753,7 +753,7 @@ mod tests {
         let incoming_error_1 = b"\x0e\xac\x0b".to_vec();
         input_packet[(counter+50)..(counter+53)].copy_from_slice(&incoming_error_1[..]);
 
-        let extension = rust_jarm::extract_extension_info(Vec::from(input_packet), counter);
+        let extension = rust_jarm::extract_extension_info(input_packet, counter);
 
         assert_eq!(extension, expected_result);
     }
@@ -769,7 +769,7 @@ mod tests {
         let incoming_error_2 = b"\x0f\xf0\x0b".to_vec();
         input_packet[(counter +82)..(counter +85)].copy_from_slice(&incoming_error_2[..]);
 
-        let extension = rust_jarm::extract_extension_info(Vec::from(input_packet), counter);
+        let extension = rust_jarm::extract_extension_info(input_packet, counter);
 
         assert_eq!(extension, expected_result);
     }
