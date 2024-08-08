@@ -174,6 +174,8 @@ impl Jarm {
             let mut data = [0_u8; SOCKET_BUFFER as usize];
             match TcpStream::connect_timeout(&address, self.timeout) {
                 Ok(mut stream) => {
+                    stream.set_read_timeout(Some(self.timeout))?;
+                    stream.set_write_timeout(Some(self.timeout))?;
                     stream.write_all(&payload)?;
                     let mut handle = stream.take(SOCKET_BUFFER);
                     let _read_result = handle.read(&mut data)?;
