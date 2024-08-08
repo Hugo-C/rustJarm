@@ -15,6 +15,6 @@ fn main() {
     };
 
     println!("JARM hash: {}", jarm_hash);
-    assert_eq!(jarm_hash, "29d29d00029d29d00042d43d00041d5de67cc9954cc85372523050f20b5007".to_string());
+    assert_eq!(jarm_hash, "27d3ed3ed0003ed1dc42d43d00041d6183ff1bfae51ebd88d70384363d525c".to_string());
     println!("Done");
 }
