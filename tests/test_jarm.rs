@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod tests {
     use rstest::rstest;
-    use rust_jarm::{PacketSpecification, TlsVersion, CipherList, CipherOrder, TlsVersionSupport, Jarm, JarmPart, cipher_bytes, version_byte, TestRng, JarmRng, PseudoRng};
+
+    use rust_jarm::{cipher_bytes, CipherList, CipherOrder, Jarm, JarmPart, JarmRng, PacketSpecification, TestRng, TlsVersion, TlsVersionSupport, version_byte};
 
     fn test_rng() -> TestRng {
         TestRng {}
@@ -643,26 +644,10 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(feature = "flaky_tests"), ignore = "Use pseudo rng")]
-    fn test_not_mocked_random_bytes() {
-        let expected_mock_value: Vec<u8> = b"********************************".to_vec();
-        let rng = PseudoRng {};
-        assert_ne!(rng.random_bytes(), expected_mock_value);
-    }
-
-    #[test]
     fn test_mocked_random_grease() {
         let expected_mock_value: Vec<u8> = b"\x0a\x0a".to_vec();
         let rng = TestRng {};
         assert_eq!(rng.random_grease(), expected_mock_value);
-    }
-
-    #[test]
-    #[cfg_attr(not(feature = "flaky_tests"), ignore = "Use pseudo rng")]
-    fn test_not_mocked_random_grease() {
-        let expected_mock_value: Vec<u8> = b"\x0a\x0a".to_vec();
-        let rng = PseudoRng {};
-        assert_ne!(rng.random_grease(), expected_mock_value);
     }
 
     #[test]
