@@ -1,12 +1,12 @@
 pub mod error;
 
-use rand::{thread_rng, Rng};
-use rand::seq::SliceRandom;
+use rand::Rng;
 use std::str::FromStr;
 use sha2::{Sha256, Digest};
 use std::net::{SocketAddr, TcpStream, ToSocketAddrs};
 use std::io::{Write, Read};
 use std::time::Duration;
+use rand::seq::IndexedRandom;
 use crate::error::{DetailedError, JarmError};
 
 const ALPN_EXTENSION: &[u8; 2] = b"\x00\x10";
@@ -762,8 +762,8 @@ impl JarmRng for TestRng {  // Mocked Rng used in tests
 
 impl JarmRng for PseudoRng {  // Real Rng used outside of tests
     fn random_bytes(&self) -> Vec<u8> {
-        let mut rng = thread_rng();
-        rng.gen::<[u8; 32]>().to_vec()
+        let mut rng = rand::rng();
+        rng.random::<[u8; 32]>().to_vec()
     }
 
     fn random_grease(&self) -> Vec<u8> {
@@ -785,7 +785,7 @@ impl JarmRng for PseudoRng {  // Real Rng used outside of tests
             b"\xea\xea".to_vec(),
             b"\xfa\xfa".to_vec(),
         ];
-        grease_list.choose(&mut rand::thread_rng()).unwrap().clone()
+        grease_list.choose(&mut rand::rng()).unwrap().clone()
     }
 }
 
