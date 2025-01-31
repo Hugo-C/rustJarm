@@ -20,3 +20,6 @@ sha2 = "^0.10"
 
 [dev-dependencies]
 rstest = "~0.24"
+
+[lints.rust]
+ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(tarpaulin_include)'] }

@@ -760,6 +760,7 @@ impl JarmRng for TestRng {  // Mocked Rng used in tests
     }
 }
 
+#[cfg(not(tarpaulin_include))]  // disable coverage
 impl JarmRng for PseudoRng {  // Real Rng used outside of tests
     fn random_bytes(&self) -> Vec<u8> {
         let mut rng = rand::rng();
