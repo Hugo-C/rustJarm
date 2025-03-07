@@ -2,7 +2,7 @@
 name = "rust_jarm"
 version = "0.3.7"
 authors = ["Hugo-C"]
-edition = "2021"
+edition = "2024"
 license = "MIT"
 description = "JARM fingerprinting in native Rust"
 repository = "https://github.com/Hugo-C/rustJarm"
@@ -19,7 +19,7 @@ rand = "^0.9"
 sha2 = "^0.10"
 
 [dev-dependencies]
-rstest = "~0.24"
+rstest = "~0.25"
 
 [lints.rust]
  unexpected_cfgs = { level = "warn", check-cfg = ['cfg(tarpaulin_include)'] }
