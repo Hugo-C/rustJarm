@@ -308,7 +308,7 @@ pub fn build_packet(jarm_details: &PacketSpecification, rng: &dyn JarmRng) -> Ve
 
 pub fn pack_as_unsigned_char(n: usize) -> u8 {
     if n >= 256 {
-        panic!("Can't pack_as_unsigned_char {:?} as it is over 255", n)
+        panic!("Can't pack_as_unsigned_char {n:?} as it is over 255")
     }
     n as u8
 }
@@ -590,7 +590,7 @@ pub fn read_packet(data: Vec<u8>) -> JarmPart {
 // Convert bytes array to u32
 pub fn as_u32_be(array: &[u8]) -> u32 {
     if array.len() != 2 {
-        eprintln!("array = {:?}", array);
+        eprintln!("array = {array:?}");
         unimplemented!()  // not needed for now
     }
     ((array[0] as u32) << 8) + (array[1] as u32)
@@ -637,7 +637,7 @@ pub fn extract_extension_info(data: Vec<u8>, counter: usize) -> String {
     let alpn = find_extension(&types, values);
 
     let formatted_types = add_formatting_hyphen(&types);
-    format!("{}|{}", alpn, formatted_types)
+    format!("{alpn}|{formatted_types}")
 }
 
 fn data_has_errors(data: &[u8], counter: usize) -> bool {
@@ -673,7 +673,7 @@ pub fn find_extension(types: &[&[u8]], values: Vec<Option<&[u8]>>) -> String {
                 Some(y) => {
                     match std::str::from_utf8(&y[3..]) {
                         Ok(s) => return s.to_string(),
-                        Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
+                        Err(e) => panic!("Invalid UTF-8 sequence: {e}"),
                     };
                 }
             }
@@ -715,7 +715,7 @@ pub fn version_byte(version: &str) -> char {
     let option = "abcdef".to_string();
     let version_index: usize = 3;
     let count: usize = match version.get(version_index..version_index+1) {
-        None => { panic!("version not expected {:?}", version)}
+        None => { panic!("version not expected {version:?}")}
         Some(str_count) => { usize::from_str(str_count).unwrap() }
     };
     option.chars().nth(count).unwrap()
