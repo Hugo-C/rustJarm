@@ -10,7 +10,7 @@ rust_jarm is a library to compute JARM fingerprint. It is more or less a direct 
 put in Cargo.toml:
 ```
 [dependencies]
-rust_jarm = "0.3.7"
+rust_jarm = "0.3.8"
 ```
 
 ## Usage
@@ -19,7 +19,7 @@ rust_jarm = "0.3.7"
     let host = "some.website.com".to_string();
     let port = "443".to_string();
     let jarm_hash = Jarm::new(host, port).hash().expect("failed to connect");
-    println!("JARM hash: {}", jarm_hash);
+    println!("JARM hash: {jarm_hash}");
 ````
 
 check [jarm.rs](examples/jarm.rs) for the full example, run it with `cargo run --example jarm`
