@@ -1,6 +1,6 @@
 pub mod error;
 
-use rand::Rng;
+use rand::RngExt;
 use std::str::FromStr;
 use sha2::{Sha256, Digest};
 use std::net::{SocketAddr, TcpStream, ToSocketAddrs};
