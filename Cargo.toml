@@ -1,6 +1,6 @@
 [package]
 name = "rust_jarm"
-version = "0.3.8"
+version = "0.3.9"
 authors = ["Hugo-C"]
 edition = "2024"
 license = "MIT"
